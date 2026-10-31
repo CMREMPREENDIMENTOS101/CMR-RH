@@ -1,0 +1,15 @@
+{
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/auth/:path*", "destination": "/api/auth?path=:path*" }
+  ],
+  "headers": [
+    { "source": "/rh-sw.js", "headers": [
+      { "key": "Cache-Control", "value": "no-cache" },
+      { "key": "Service-Worker-Allowed", "value": "/" }
+    ] },
+    { "source": "/rh.webmanifest", "headers": [
+      { "key": "Content-Type", "value": "application/manifest+json" }
+    ] }
+  ]
+}

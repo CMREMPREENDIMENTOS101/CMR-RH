@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Efetivo CMR</title>
+<meta name="theme-color" content="#C8102E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Efetivo CMR">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/efetivo.webmanifest">
+<link rel="icon" href="/cmr-logo.png">
+<link rel="apple-touch-icon" href="/efetivo-icon-180.png">
+<style>
+:root{
+  --red:#C8102E;--red-dark:#9e0c24;--red-soft:#fbe7ea;
+  --bg:#f2f2f4;--card:#ffffff;--text:#151515;--muted:#6b6b72;--line:#e3e3e8;
+  --ok:#0f8a55;--ok-soft:#e3f5ec;--off:#b0452f;--off-soft:#fbeae5;--chip:#f0f0f3;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f0f10;--card:#1a1a1c;--text:#ececef;--muted:#9a9aa3;--line:#2c2c30;
+    --red-soft:#3a1219;--ok:#35c486;--ok-soft:#10301f;--off:#ff8a70;--off-soft:#3a1d15;--chip:#26262a;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* topo */
+.top{position:sticky;top:0;z-index:20;background:var(--red);color:#fff;
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.top h1{font-size:18px;margin:0;letter-spacing:.3px;flex:1}
+.top h1 small{display:block;font-size:11px;font-weight:500;opacity:.85;letter-spacing:.2px}
+.top .ic{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:10px;height:36px;min-width:36px;padding:0 10px;font-size:13px}
+.tabs{display:flex;background:var(--red-dark)}
+.tabs button{flex:1;background:none;border:0;color:rgba(255,255,255,.7);padding:10px 0;font-weight:600;font-size:14px;border-bottom:3px solid transparent}
+.tabs button.on{color:#fff;border-bottom-color:#fff}
+
+main{max-width:560px;margin:0 auto;padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+.lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.row{display:flex;gap:8px;align-items:center}
+.field{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;min-height:44px}
+select.field{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+.dia{font-size:13px;color:var(--muted);margin-top:6px}
+.obra-msg{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:var(--muted)}
+.link{background:none;border:0;color:var(--red);font-weight:600;padding:6px 0}
+
+.clima{display:flex;gap:5px}
+.clima button{flex:1;min-width:0;padding:0;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:22px}
+.clima button.on{border-color:var(--red);background:var(--red-soft);box-shadow:inset 0 0 0 1px var(--red)}
+
+.contagem{display:flex;gap:8px;margin-bottom:10px}
+.contagem div{flex:1;border-radius:12px;padding:10px;text-align:center;background:var(--card);border:1px solid var(--line)}
+.contagem b{display:block;font-size:24px;line-height:1.1}
+.contagem span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.contagem .p b{color:var(--ok)} .contagem .a b{color:var(--off)}
+
+.acoes-lista{display:flex;gap:8px;margin-bottom:8px}
+.acoes-lista button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px;font-size:13px;font-weight:600}
+
+.pessoa{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ok);
+  border-radius:12px;padding:10px 10px 10px 12px;margin-bottom:8px}
+.pessoa.aus{border-left-color:var(--off);opacity:.92}
+.av{width:38px;height:38px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.pessoa.aus .av{background:var(--muted)}
+.pinfo{flex:1;min-width:0}
+.pnome{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcargo{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmot{font-size:12px;color:var(--off);font-weight:600}
+.extra-tag{font-size:10px;font-weight:700;background:var(--chip);color:var(--muted);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+.tg{flex:none;border:0;border-radius:10px;height:40px;min-width:92px;font-weight:700;font-size:13px;background:var(--ok-soft);color:var(--ok)}
+.pessoa.aus .tg{background:var(--off-soft);color:var(--off)}
+
+textarea.field{min-height:84px;resize:vertical}
+
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.barra .in{max-width:560px;margin:0 auto;display:flex;gap:8px}
+.btn{border:0;border-radius:12px;min-height:50px;padding:0 16px;font-weight:700;font-size:15px}
+.btn.pri{background:var(--red);color:#fff;flex:1}
+.btn.zap{background:#1faa53;color:#fff;flex:1}
+.btn.sec{background:var(--chip);color:var(--text)}
+.status{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 10px}
+.status.err{color:var(--off);font-weight:600}
+.status.ok{color:var(--ok)}
+
+/* folhas (bottom sheets) */
+.veu{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.folha{background:var(--card);width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:88vh;display:flex;flex-direction:column;
+  padding:8px 16px calc(16px + env(safe-area-inset-bottom))}
+.folha .puxador{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 10px}
+.folha h2{font-size:17px;margin:0 0 10px}
+.folha .corpo{overflow:auto;flex:1;min-height:0}
+.folha .pe{display:flex;gap:8px;margin-top:12px}
+.previa{white-space:pre-wrap;background:#e7ffdb;color:#111;border-radius:10px;padding:12px;font-size:14px;line-height:1.45;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){.previa{background:#025c4c;color:#e9edef}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:8px 12px;font-size:13px;font-weight:600}
+.chips button.on{background:var(--off-soft);border-color:var(--off);color:var(--off)}
+.lista-add .it{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.lista-add .it .pinfo small{color:var(--muted)}
+.lista-add .it button{border:0;background:var(--red);color:#fff;border-radius:8px;height:34px;padding:0 12px;font-weight:700}
+.sep{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 4px}
+.mt{margin-top:10px}
+.inst{display:flex;align-items:center;gap:10px;background:var(--red-soft);border:1px solid var(--red);border-radius:12px;
+  padding:10px 12px;font-size:13px;font-weight:600;margin-bottom:10px}
+.inst span{flex:1}
+.inst button{border:0;background:var(--red);color:#fff;border-radius:9px;height:38px;padding:0 14px;font-weight:700;flex:none}
+.aviso{background:#fff4d6;color:#6b4a00;border:1px solid #f0dca6;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600;margin-bottom:10px;text-align:center}
+@media (prefers-color-scheme:dark){.aviso{background:#3a2f0f;color:#f4dfa0;border-color:#5a4a1c}}
+.passos{counter-reset:p;padding:0;margin:6px 0 0;list-style:none}
+.passos li{counter-increment:p;position:relative;padding:8px 0 8px 34px;border-bottom:1px solid var(--line);font-size:14px}
+.passos li:before{content:counter(p);position:absolute;left:0;top:8px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+
+/* historico */
+.hist-it{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;width:100%;text-align:left}
+.hist-it .d{font-weight:700}
+.hist-dia{margin-bottom:14px}
+.hist-dia .hist-it{margin-left:14px;width:calc(100% - 14px);padding:10px 12px}
+.hist-dia-cab{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:12px;background:var(--red);color:#fff;padding:12px;margin-bottom:8px}
+.hist-dia-cab .d{font-weight:700;font-size:16px}
+.hist-dia-cab .dia{color:rgba(255,255,255,.85)}
+.hist-dia-cab .n{margin-left:auto;text-align:right}
+.hist-dia-cab .n b{font-size:22px;display:block;line-height:1}
+.hist-dia-cab .n small{font-size:11px;opacity:.85}
+.hist-it .n{margin-left:auto;text-align:right}
+.hist-it .n b{font-size:20px;color:var(--ok);display:block;line-height:1}
+.hist-it .n small{font-size:11px;color:var(--muted)}
+.vazio{text-align:center;color:var(--muted);padding:30px 10px}
+
+/* login */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login .card{width:100%;max-width:380px;padding:22px}
+.login img{width:110px;display:block;margin:0 auto 10px;background:#fff;border-radius:12px;padding:8px 10px}
+.login h2{text-align:center;margin:0 0 4px}
+.login p{text-align:center;color:var(--muted);margin:0 0 16px;font-size:13px}
+.login .field{margin-bottom:10px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;
+  padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="tela-login" class="login hidden">
+  <form class="card" onsubmit="entrar(event)">
+    <img src="/cmr-logo.png" alt="">
+    <h2>Efetivo CMR</h2>
+    <p>Entre com o mesmo login do Sistema RH</p>
+    <input id="lg-email" class="field" type="email" placeholder="E-mail" autocomplete="username" required>
+    <input id="lg-senha" class="field" type="password" placeholder="Senha" autocomplete="current-password" required>
+    <div id="lg-erro" class="status err hidden"></div>
+    <button class="btn pri" style="width:100%" id="lg-btn">Entrar</button>
+  </form>
+</section>
+
+<!-- APP -->
+<section id="tela-app" class="hidden">
+  <header>
+    <div class="top">
+      <h1>Efetivo CMR<small id="top-user"></small></h1>
+      <button class="ic" onclick="recarregar()" title="Atualizar">↻</button>
+      <button class="ic" onclick="sair()">Sair</button>
+    </div>
+    <nav class="tabs">
+      <button id="tab-dia" class="on" onclick="aba('dia')">Lançar</button>
+      <button id="tab-hist" onclick="aba('hist')">Histórico</button>
+    </nav>
+  </header>
+
+  <main id="pg-dia">
+    <div id="aviso-off" class="aviso hidden"></div>
+    <div id="banner-inst" class="inst hidden">
+      <span>📲 Instale na tela inicial para abrir como aplicativo</span>
+      <button onclick="instalar()">Instalar</button>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1">
+          <div class="lbl">Data</div>
+          <input id="f-data" class="field" type="date" onchange="trocarContexto()">
+        </div>
+      </div>
+      <div class="dia" id="f-dia-semana"></div>
+      <div class="lbl mt">Obra</div>
+      <select id="f-obra" class="field" onchange="trocarContexto()"></select>
+      <div class="obra-msg"><span id="obra-msg-txt"></span><button class="link" onclick="editarObraMsg()">Editar</button></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Tempo</div>
+      <div class="clima" id="f-clima"></div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="contagem">
+      <div class="p"><b id="c-pres">0</b><span>Presentes</span></div>
+      <div class="a"><b id="c-aus">0</b><span>Ausentes</span></div>
+    </div>
+
+    <div class="acoes-lista">
+      <button onclick="abrirAdicionar()">＋ Adicionar pessoa</button>
+      <button onclick="todosPresentes()">✓ Todos presentes</button>
+    </div>
+
+    <div id="lista"></div>
+
+    <div class="card mt">
+      <div class="lbl">Observações</div>
+      <textarea id="f-obs" class="field" placeholder="Ex.: concretagem da laje, chuva à tarde…" oninput="mudouObs()"></textarea>
+    </div>
+  </main>
+
+  <main id="pg-hist" class="hidden">
+    <div class="card">
+      <div class="lbl">Obra</div>
+      <select id="h-obra" class="field" onchange="mudouHistSel()"></select>
+    </div>
+    <div id="hist-lista"></div>
+  </main>
+
+  <div class="barra" id="barra-dia">
+    <div class="in">
+      <button class="btn pri" onclick="abrirPrevia()">Gerar mensagem</button>
+    </div>
+  </div>
+</section>
+
+<div id="veu" class="veu hidden" onclick="if(event.target===this)fecharFolha()">
+  <div class="folha" id="folha"></div>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════════════
+// Efetivo CMR — lançamento diário do efetivo de obra pelo celular.
+// Colaboradores e obras vêm da mesma base do Sistema RH (quadro de
+// Alocação de Obras); os dias lançados ficam em cmr-rh-efetivo.json.
+// ════════════════════════════════════════════════════════════════
+const TOKEN_KEY='cmr_efetivo_token', USER_KEY='cmr_efetivo_user', OBRA_KEY='cmr_efetivo_obra';
+const BASE_KEY='cmr_efetivo_base', FILA_KEY='cmr_efetivo_fila', HIST_KEY='cmr_efetivo_hist';
+const GERAL='__geral__';
+let offline=false, promptInstalar=null;
+const CLIMAS=['☀️','🌤️','⛅','🌥️','☁️','🌧️','⛈️'];
+const MOTIVOS=['Falta','Atestado','Folga','Férias','Afastado','Outra obra'];
+const DIAS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+const MINUSC=new Set(['de','da','do','das','dos','e']);
+// Nomes que chegam sem acento do cadastro de obras.
+const ACENTOS={mourao:'Mourão',maringa:'Maringá',goiania:'Goiânia',sao:'São',guarapuava:'Guarapuava',irati:'Irati',teixeira:'Teixeira'};
+
+let token=null, usuario=null;
+let EMP=[], OBRAS=[], EFE={config:{apelidos:{},obras:{}},registros:[]};
+let atual=null;        // {data, obraId, clima, pessoas:[...], obs}
+let salvoServidor=null; // registro salvo do contexto atual
+
+// ── utilidades ──
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function tituloCaso(s){
+  return String(s||'').toLowerCase().split(/(\s+|-)/).map((p,i)=>{
+    if(!p.trim()||p==='-') return p;
+    if(i>0&&MINUSC.has(p)) return p;
+    if(ACENTOS[p]) return ACENTOS[p];
+    return p.charAt(0).toUpperCase()+p.slice(1);
+  }).join('');
+}
+function fraseCaso(s){ s=String(s||'').trim().toLowerCase(); return s?s.charAt(0).toUpperCase()+s.slice(1):''; }
+function inits(n){ const p=String(n||'').trim().split(/\s+/); return ((p[0]||'')[0]||'').toUpperCase()+((p.length>1?p[p.length-1][0]:'')||'').toUpperCase(); }
+// Foto 3x4 do cadastro (base64, mesma do cmr-rh) quando houver; senão, as iniciais.
+function avatarHtml(foto,nome){ return foto?'<img src="'+foto+'" alt="">':esc(inits(nome)); }
+// Busca a foto ao vivo em EMP (por id), em vez de confiar no que está salvo em
+// atual.pessoas: rascunhos locais salvos antes de a foto existir no cadastro (ou
+// dias antigos) nunca a teriam — assim ela aparece sem precisar recomeçar o dia.
+function fotoDe(id){ if(id==null) return ''; const e=EMP.find(x=>x.id===id); return (e&&e.foto)||''; }
+function hojeISO(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function isoParaBR(iso){ const [a,m,d]=iso.split('-'); return d+'/'+m+'/'+a; }
+function diaSemana(iso){ const [a,m,d]=iso.split('-').map(Number); return DIAS[new Date(a,m-1,d).getDay()]; }
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+const temObra=o=>o&&String(o).trim()&&String(o).trim()!=='—';
+
+// Ordem de exibição: encarregado primeiro, servente por último.
+function nivel(funcao){
+  const f=String(funcao||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(/encarreg/.test(f)) return 0;
+  if(/contra/.test(f)) return 2;
+  if(/mestre/.test(f)) return 1;
+  if(/tecnic|engenh|estagi|almox/.test(f)) return 3;
+  if(/meio/.test(f)) return 5;
+  if(/servente|ajudante|auxiliar/.test(f)) return 6;
+  return 4;
+}
+const ordenar=l=>l.slice().sort((a,b)=>nivel(a.funcao)-nivel(b.funcao)||a.nome.localeCompare(b.nome,'pt'));
+
+// ── API ──
+async function api(url,payload){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  let d={}; try{ d=await r.json(); }catch(e){}
+  if(r.status===401&&url==='/api/dados'){ sair(true); throw new Error('Sessão expirada — entre de novo'); }
+  if(!r.ok) throw new Error(d.error||('Erro '+r.status));
+  return d;
+}
+const dados=p=>api('/api/dados',Object.assign({token},p));
+
+// ── login ──
+async function entrar(ev){
+  ev.preventDefault();
+  const b=$('lg-btn'), e=$('lg-erro');
+  b.disabled=true; b.textContent='Entrando…'; e.classList.add('hidden');
+  try{
+    const d=await api('/api/auth',{action:'login',email:$('lg-email').value.trim(),password:$('lg-senha').value});
+    token=d.access_token; usuario=d.user;
+    try{ localStorage.setItem(TOKEN_KEY,token); localStorage.setItem(USER_KEY,JSON.stringify(usuario)); }catch(_){}
+    await iniciar();
+  }catch(err){ e.textContent=err.message; e.classList.remove('hidden'); }
+  finally{ b.disabled=false; b.textContent='Entrar'; }
+}
+function sair(expirou){
+  try{ localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }catch(_){}
+  token=null; usuario=null;
+  $('tela-app').classList.add('hidden'); $('tela-login').classList.remove('hidden');
+  if(expirou){ $('lg-erro').textContent='Sessão expirada — entre de novo.'; $('lg-erro').classList.remove('hidden'); }
+}
+
+// ── carga ──
+// A obra costuma ficar sem sinal. Tudo que foi baixado uma vez fica no aparelho,
+// então o app abre e lança o efetivo offline; o envio sai da fila quando voltar.
+function guardarBase(){
+  try{ localStorage.setItem(BASE_KEY,JSON.stringify({EMP,OBRAS,EFE,em:new Date().toISOString()})); }catch(_){}
+}
+function lerBase(){
+  try{ return JSON.parse(localStorage.getItem(BASE_KEY)||'null'); }catch(_){ return null; }
+}
+async function carregarTudo(){
+  try{
+    const [c,o,f]=await Promise.all([
+      dados({action:'carregar'}), dados({action:'carregar-obras'}), dados({action:'carregar-efetivo'})
+    ]);
+    EMP=(c.colaboradores||[]).filter(e=>!e.desligado);
+    OBRAS=(o.obras||[]).slice();
+    EFE=f.efetivo||EFE;
+    offline=false;
+  }catch(err){
+    const b=lerBase();
+    if(!b) throw err;                       // primeira vez precisa de internet
+    EMP=b.EMP||[]; OBRAS=b.OBRAS||[]; EFE=b.EFE||EFE; offline=true;
+  }
+  // obra que só existe no cadastro de alguém também aparece
+  const nomes=new Set(OBRAS.map(x=>x.nome));
+  [...new Set(EMP.map(e=>temObra(e.obra)?String(e.obra).trim():'').filter(Boolean))]
+    .filter(n=>!nomes.has(n)).forEach(n=>OBRAS.push({id:'n:'+n,nome:n,desc:'',status:''}));
+  if(!offline) guardarBase();
+  pintarConexao();
+}
+function pintarConexao(){
+  const b=$('aviso-off'), f=fila();
+  const partes=[];
+  if(offline||!navigator.onLine) partes.push('📴 Sem conexão — dá para lançar normalmente');
+  if(f.length) partes.push(f.length+' dia(s) esperando para enviar');
+  b.textContent=partes.join(' · ');
+  b.classList.toggle('hidden',!partes.length);
+}
+async function iniciar(){
+  $('tela-login').classList.add('hidden'); $('tela-app').classList.remove('hidden');
+  $('top-user').textContent=usuario?(usuario.name||usuario.email):'';
+  $('status').textContent='Carregando…'; $('status').className='status';
+  try{ await carregarTudo(); }
+  catch(err){ $('status').textContent='Não consegui carregar a base: '+err.message; $('status').className='status err'; return; }
+  montarObras();
+  if(!$('f-data').value) $('f-data').value=hojeISO();
+  trocarContexto();
+  enviarFila();
+}
+async function recarregar(){
+  try{ await carregarTudo(); montarObras(); trocarContexto(); if(!$('pg-hist').classList.contains('hidden')) renderHist(); toast('Atualizado'); }
+  catch(err){ toast(err.message); }
+}
+function montarObras(){
+  const ativas=OBRAS.filter(o=>!/conclu|encerr|paralis/i.test(o.status||'')&&!/sem obra/i.test(o.nome));
+  const cont=o=>EMP.filter(e=>String(e.obra||'').trim()===o.nome).length;
+  const opts=ativas.map(o=>'<option value="'+esc(o.id)+'">'+esc(o.nome)+' ('+cont(o)+')</option>').join('');
+  let salva=''; try{ salva=localStorage.getItem(OBRA_KEY)||''; }catch(_){}
+  const sel=$('f-obra'), antes=sel.value||salva;
+  sel.innerHTML=opts;
+  if(ativas.some(o=>String(o.id)===antes)) sel.value=antes;
+  // Historico tem a opcao geral e lembra a escolha: quem confere o dia de
+  // todas as obras nao quer ver o filtro voltar sozinho para uma obra.
+  const h=$('h-obra'), hAntes=h.value||lerHistSel();
+  h.innerHTML='<option value="'+GERAL+'">Todas as obras (geral)</option>'+opts;
+  h.value=(hAntes===GERAL||ativas.some(o=>String(o.id)===hAntes))?hAntes:GERAL;
+}
+function lerHistSel(){ try{ return localStorage.getItem(HIST_KEY)||GERAL; }catch(_){ return GERAL; } }
+function mudouHistSel(){ try{ localStorage.setItem(HIST_KEY,$('h-obra').value); }catch(_){} renderHist(); }
+const obraAtual=()=>OBRAS.find(o=>String(o.id)===$('f-obra').value);
+
+// Nome e cidade como saem na mensagem ("Obra Coamo." / "Campo Mourão.").
+function obraMsg(o){
+  const cfg=EFE.config.obras[String(o.id)]||{};
+  const nome=cfg.nome||tituloCaso(String(o.nome).replace(/^\s*[A-Za-z]+\s*\d+\s*[-–—:]\s*/,''));
+  const cidade=cfg.cidade!=null?cfg.cidade:tituloCaso(String(o.desc||'').split('/')[0].trim());
+  return {nome,cidade};
+}
+function apelido(e){
+  const a=EFE.config.apelidos[String(e.id)];
+  if(a) return a;
+  const partes=String(e.nome||'').trim().split(/\s+/);
+  return tituloCaso(partes[0]||'');
+}
+
+// ── contexto (data + obra) ──
+const chaveRasc=(d,o)=>'cmr_efetivo_rasc:'+d+':'+o;
+function trocarContexto(){
+  const data=$('f-data').value||hojeISO(), o=obraAtual();
+  $('f-dia-semana').textContent=diaSemana(data);
+  if(!o){ $('lista').innerHTML='<div class="vazio">Nenhuma obra cadastrada no Sistema RH.</div>'; return; }
+  try{ localStorage.setItem(OBRA_KEY,String(o.id)); }catch(_){}
+  const m=obraMsg(o);
+  $('obra-msg-txt').textContent='Na mensagem: Obra '+m.nome+(m.cidade?' · '+m.cidade:'');
+
+  salvoServidor=EFE.registros.find(r=>r.data===data&&String(r.obraId)===String(o.id))||null;
+  let rasc=null; try{ rasc=JSON.parse(localStorage.getItem(chaveRasc(data,o.id))||'null'); }catch(_){}
+
+  if(rasc) atual=rasc;
+  else if(salvoServidor&&salvoServidor.parcial) atual=aplicarAjuste(novoDia(data,o),salvoServidor);
+  else if(salvoServidor) atual=JSON.parse(JSON.stringify(salvoServidor));
+  else atual=novoDia(data,o);
+  atual.data=data; atual.obraId=String(o.id);
+  renderDia();
+}
+// Parte da equipe do dia e sobrepoe o que o RH corrigiu. Ao salvar, o registro
+// vira lista completa (sem `parcial`), ja com o ajuste do RH dentro.
+function aplicarAjuste(dia,aj){
+  aj.pessoas.forEach(q=>{
+    const p=q.id!=null?dia.pessoas.find(x=>x.id===q.id):null;
+    // ajusteRH (data do ajuste) fica na pessoa: rastro de que o RH mexeu ali.
+    if(p){ p.presente=!!q.presente; p.motivo=q.motivo||''; if(q.ajusteRH) p.ajusteRH=q.ajusteRH; }
+    else dia.pessoas.push(Object.assign({},q,{extra:true}));
+  });
+  return dia;
+}
+function novoDia(data,o){
+  const alocados=EMP.filter(e=>String(e.obra||'').trim()===o.nome)
+    .map(e=>({id:e.id,nome:apelido(e),nomeCompleto:e.nome,funcao:fraseCaso(e.cargo),presente:true,motivo:''}));
+  // Quem foi lançado como "extra" no último dia desta obra (encarregado de outra
+  // coluna, gente emprestada) volta sugerido; dá para tirar com um toque.
+  const ult=EFE.registros.filter(r=>!r.parcial&&String(r.obraId)===String(o.id)&&r.data<data).sort((a,b)=>b.data<a.data?-1:1)[0];
+  const ids=new Set(alocados.map(p=>p.id));
+  const extras=ult?ult.pessoas.filter(p=>p.extra&&(p.id==null||!ids.has(p.id))).map(p=>Object.assign({},p,{presente:true,motivo:''})):[];
+  return {data,obraId:String(o.id),clima:ult&&ult.clima||'☀️',pessoas:alocados.concat(extras),obs:''};
+}
+function guardarRascunho(){
+  try{ localStorage.setItem(chaveRasc(atual.data,atual.obraId),JSON.stringify(atual)); }catch(_){}
+  pintarStatus(true);
+}
+function pintarStatus(alterado){
+  const s=$('status');
+  if(alterado){ s.textContent='Alterações ainda não salvas — toque em "Gerar mensagem"'; s.className='status'; return; }
+  if(salvoServidor){
+    const h=new Date(salvoServidor.salvoEm).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    if(salvoServidor.parcial){ s.textContent='Só há ajuste do RH neste dia — confira a equipe e gere a mensagem'; s.className='status'; }
+    else if(salvoServidor.pendente){ s.textContent='📴 Lançado às '+h+' — esperando sinal para enviar'; s.className='status'; }
+    else { s.textContent='✓ Salvo em '+h+(salvoServidor.salvoPor?' por '+salvoServidor.salvoPor:''); s.className='status ok'; }
+  } else { s.textContent='Dia ainda não lançado'; s.className='status'; }
+}
+
+// ── render do dia ──
+function renderDia(){
+  $('f-clima').innerHTML=CLIMAS.map(c=>'<button class="'+(atual.clima===c?'on':'')+'" onclick="setClima(\''+c+'\')">'+c+'</button>').join('');
+  $('f-obs').value=atual.obs||'';
+  renderLista();
+  let temRasc=false; try{ temRasc=!!localStorage.getItem(chaveRasc(atual.data,atual.obraId)); }catch(_){}
+  pintarStatus(temRasc);
+}
+function renderLista(){
+  const l=ordenar(atual.pessoas.map((p,i)=>Object.assign({_i:i},p)));
+  const pres=l.filter(p=>p.presente), aus=l.filter(p=>!p.presente);
+  $('c-pres').textContent=pres.length; $('c-aus').textContent=aus.length;
+  // Cartão mostra o nome completo (como no cmr-rh); o apelido de "p.nome" segue
+  // existindo só para a mensagem do WhatsApp (editável em "Nome na mensagem").
+  const card=p=>{
+    const nomeExibido=p.nomeCompleto||p.nome;
+    return '<div class="pessoa'+(p.presente?'':' aus')+'">'
+    +'<div class="av">'+avatarHtml(fotoDe(p.id),nomeExibido)+'</div>'
+    +'<div class="pinfo" onclick="editarPessoa('+p._i+')">'
+      +'<div class="pnome">'+esc(nomeExibido)+(p.extra?'<span class="extra-tag">EXTRA</span>':'')+'</div>'
+      +'<div class="pcargo">'+esc(p.funcao||'—')+'</div>'
+      +(!p.presente&&p.motivo?'<div class="pmot">'+esc(p.motivo)+'</div>':'')
+    +'</div>'
+    +'<button class="tg" onclick="alternar('+p._i+')">'+(p.presente?'✓ Presente':'✗ Ausente')+'</button>'
+    +'</div>';
+  };
+  $('lista').innerHTML=l.length?pres.map(card).join('')+(aus.length?'<div class="sep">Ausentes</div>'+aus.map(card).join(''):'')
+    :'<div class="vazio">Ninguém alocado nesta obra.<br>Use "＋ Adicionar pessoa".</div>';
+}
+function setClima(c){ atual.clima=c; renderDia(); guardarRascunho(); }
+function mudouObs(){ atual.obs=$('f-obs').value; guardarRascunho(); }
+function alternar(i){
+  const p=atual.pessoas[i];
+  if(p.presente){ p.presente=false; renderLista(); guardarRascunho(); escolherMotivo(i); }
+  else { p.presente=true; p.motivo=''; renderLista(); guardarRascunho(); }
+}
+function todosPresentes(){ atual.pessoas.forEach(p=>{p.presente=true;p.motivo='';}); renderLista(); guardarRascunho(); }
+
+// ── folhas ──
+function abrirFolha(html){ $('folha').innerHTML='<div class="puxador"></div>'+html; $('veu').classList.remove('hidden'); }
+function fecharFolha(){ $('veu').classList.add('hidden'); $('folha').innerHTML=''; }
+
+function escolherMotivo(i){
+  const p=atual.pessoas[i];
+  const naOutraObra=/^Outra obra:/.test(p.motivo||'');
+  abrirFolha('<h2>'+esc(p.nome)+' ausente — motivo?</h2>'
+    +'<div class="chips">'+MOTIVOS.map(m=>'<button class="'+((m==='Outra obra'?naOutraObra:p.motivo===m)?'on':'')+'" onclick="'
+      +(m==='Outra obra'?'escolherOutraObra('+i+')':'setMotivo('+i+',this.textContent)')+'">'+esc(m)+'</button>').join('')+'</div>'
+    +'<input id="mot-livre" class="field" placeholder="Outro motivo (opcional)" value="'+esc((MOTIVOS.includes(p.motivo)||naOutraObra)?'':p.motivo)+'">'
+    +'<div class="pe"><button class="btn sec" onclick="setMotivo('+i+',\'\')">Sem motivo</button>'
+    +'<button class="btn pri" onclick="setMotivo('+i+',$(\'mot-livre\').value)">OK</button></div>');
+}
+// Ausente "Outra obra": pede qual, em vez de deixar só o texto genérico — assim a
+// mensagem final já sai com o nome da obra (ex.: "Outra obra: CMR 18 - Coamo").
+function escolherOutraObra(i){
+  const p=atual.pessoas[i], atualObra=obraAtual();
+  const opcoes=OBRAS.filter(o=>!atualObra||String(o.id)!==String(atualObra.id))
+    .filter(o=>!/conclu|encerr|paralis/i.test(o.status||''));
+  abrirFolha('<h2>'+esc(p.nome)+' foi pra qual obra?</h2>'
+    +(opcoes.length
+      ? '<div class="chips">'+opcoes.map(o=>'<button onclick="setMotivo('+i+',\'Outra obra: \'+this.textContent)">'+esc(o.nome)+'</button>').join('')+'</div>'
+      : '<div class="vazio">Nenhuma outra obra cadastrada no Sistema RH.</div>')
+    +'<div class="pe"><button class="btn sec" onclick="escolherMotivo('+i+')">Voltar</button></div>');
+}
+function setMotivo(i,m){ atual.pessoas[i].motivo=String(m||'').trim(); fecharFolha(); renderLista(); guardarRascunho(); }
+
+function editarPessoa(i){
+  const p=atual.pessoas[i];
+  abrirFolha('<h2>Editar</h2><div class="corpo">'
+    +'<div class="lbl">Nome na mensagem</div><input id="ed-nome" class="field" value="'+esc(p.nome)+'">'
+    +(p.nomeCompleto?'<div class="dia">'+esc(p.nomeCompleto)+'</div>':'')
+    +'<div class="lbl mt">Função</div><input id="ed-fun" class="field" value="'+esc(p.funcao)+'">'
+    +(p.id!=null?'<label class="row mt" style="font-size:13px"><input type="checkbox" id="ed-sempre" checked> Usar este nome sempre (todas as obras)</label>':'')
+    +'</div><div class="pe">'
+    +(p.extra?'<button class="btn sec" onclick="removerPessoa('+i+')">Tirar da lista</button>':'')
+    +'<button class="btn pri" onclick="salvarPessoa('+i+')">Salvar</button></div>');
+}
+async function salvarPessoa(i){
+  const p=atual.pessoas[i], nome=$('ed-nome').value.trim(), fun=$('ed-fun').value.trim();
+  if(!nome) return toast('Informe o nome');
+  p.nome=nome; p.funcao=fun;
+  const sempre=$('ed-sempre')&&$('ed-sempre').checked;
+  fecharFolha(); renderLista(); guardarRascunho();
+  if(sempre&&p.id!=null&&EFE.config.apelidos[String(p.id)]!==nome){
+    EFE.config.apelidos[String(p.id)]=nome;
+    try{ const r=await dados({action:'salvar-efetivo',config:{apelidos:{[p.id]:nome}}}); EFE=r.efetivo; }
+    catch(err){ toast('Apelido não salvo: '+err.message); }
+  }
+}
+function removerPessoa(i){ atual.pessoas.splice(i,1); fecharFolha(); renderLista(); guardarRascunho(); }
+
+function abrirAdicionar(){
+  abrirFolha('<h2>Adicionar pessoa</h2>'
+    +'<input id="add-busca" class="field" placeholder="Buscar colaborador…" oninput="filtrarAdd()">'
+    +'<div class="corpo lista-add" id="add-lista"></div>'
+    +'<div class="sep">Ou alguém fora do cadastro</div>'
+    +'<div class="row"><input id="add-nome" class="field" placeholder="Nome"><input id="add-fun" class="field" placeholder="Função"></div>'
+    +'<div class="pe"><button class="btn pri" onclick="addLivre()">Adicionar</button></div>');
+  filtrarAdd();
+}
+function filtrarAdd(){
+  const q=($('add-busca').value||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const ja=new Set(atual.pessoas.map(p=>p.id).filter(x=>x!=null));
+  const l=EMP.filter(e=>!ja.has(e.id))
+    .filter(e=>!q||(e.nome+' '+(e.cargo||'')+' '+(e.obra||'')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))
+    .sort((a,b)=>nivel(a.cargo)-nivel(b.cargo)||a.nome.localeCompare(b.nome,'pt'));
+  $('add-lista').innerHTML=l.slice(0,60).map(e=>'<div class="it"><div class="av">'+avatarHtml(e.foto,e.nome)+'</div>'
+    +'<div class="pinfo"><div class="pnome">'+esc(e.nome)+'</div><small>'+esc(fraseCaso(e.cargo)||'—')+' · '+esc(temObra(e.obra)?e.obra:'sem obra')+'</small></div>'
+    +'<button onclick="addColab('+e.id+')">＋</button></div>').join('')||'<div class="vazio">Ninguém encontrado</div>';
+}
+function addColab(id){
+  const e=EMP.find(x=>x.id===id); if(!e) return;
+  atual.pessoas.push({id:e.id,nome:apelido(e),nomeCompleto:e.nome,funcao:fraseCaso(e.cargo),presente:true,motivo:'',extra:true});
+  renderLista(); guardarRascunho(); filtrarAdd(); toast(apelido(e)+' adicionado');
+}
+function addLivre(){
+  const n=$('add-nome').value.trim(); if(!n) return toast('Informe o nome');
+  atual.pessoas.push({id:null,nome:n,funcao:$('add-fun').value.trim(),presente:true,motivo:'',extra:true});
+  fecharFolha(); renderLista(); guardarRascunho();
+}
+
+function editarObraMsg(){
+  const o=obraAtual(); if(!o) return; const m=obraMsg(o);
+  abrirFolha('<h2>'+esc(o.nome)+' na mensagem</h2>'
+    +'<div class="lbl">Nome da obra</div><input id="om-nome" class="field" value="'+esc(m.nome)+'">'
+    +'<div class="lbl mt">Cidade</div><input id="om-cid" class="field" value="'+esc(m.cidade)+'">'
+    +'<div class="pe"><button class="btn pri" onclick="salvarObraMsg()">Salvar</button></div>');
+}
+async function salvarObraMsg(){
+  const o=obraAtual(), v={nome:$('om-nome').value.trim(),cidade:$('om-cid').value.trim()};
+  EFE.config.obras[String(o.id)]=v; fecharFolha(); trocarContexto();
+  try{ const r=await dados({action:'salvar-efetivo',config:{obras:{[o.id]:v}}}); EFE=r.efetivo; trocarContexto(); }
+  catch(err){ toast('Não salvo: '+err.message); }
+}
+
+// ── mensagem ──
+function montarTexto(reg){
+  const o=OBRAS.find(x=>String(x.id)===String(reg.obraId))||{id:reg.obraId,nome:reg.obraNome||'',desc:''};
+  const m=obraMsg(o);
+  const l=ordenar(reg.pessoas), pres=l.filter(p=>p.presente), aus=l.filter(p=>!p.presente);
+  const linha=(p,i)=>(i+1)+'- '+p.nome+(p.funcao?' ('+p.funcao+')':'')+(!p.presente&&p.motivo?' – '+p.motivo:'')+'.';
+  return ['Efetivo CMR.',
+    '📅 '+isoParaBR(reg.data),
+    (reg.clima||'☀️')+' '+diaSemana(reg.data),
+    '👷🚧 Obra '+m.nome+'.',
+  ].concat(m.cidade?[m.cidade+'.']:[]).concat([
+    '','Efetivo: '+pres.length,'',
+  ]).concat(pres.map(linha)).concat([
+    '','*AUSENTES:*',
+  ]).concat(aus.map(linha)).concat([
+    '','*OBS.:*',
+  ]).concat(reg.obs&&reg.obs.trim()?[reg.obs.trim()]:[]).join('\n');
+}
+function abrirPrevia(){
+  if(!atual) return;
+  if(!atual.pessoas.some(p=>p.presente)&&!confirm('Nenhum presente. Gerar assim mesmo?')) return;
+  const txt=montarTexto(atual);
+  abrirFolha('<h2>Mensagem</h2><div class="corpo"><div class="previa" id="previa-txt">'+esc(txt)+'</div></div>'
+    +'<div class="status" id="salv-st">Salvando…</div>'
+    +'<div class="pe"><button class="btn sec" onclick="copiar()">Copiar</button>'
+    +'<button class="btn zap" onclick="whats()">WhatsApp</button></div>');
+  salvar(txt);
+}
+// ── fila de envio (obra sem sinal) ──
+function fila(){ try{ return JSON.parse(localStorage.getItem(FILA_KEY)||'[]'); }catch(_){ return []; } }
+function gravarFila(f){ try{ localStorage.setItem(FILA_KEY,JSON.stringify(f)); }catch(_){} }
+function enfileirar(reg){
+  const f=fila().filter(r=>!(r.data===reg.data&&String(r.obraId)===String(reg.obraId)));
+  f.push(reg); gravarFila(f);
+  // entra no histórico local marcado como pendente, para o encarregado enxergar o dia
+  const i=EFE.registros.findIndex(x=>x.data===reg.data&&String(x.obraId)===String(reg.obraId));
+  const local=Object.assign({},reg,{pendente:true,salvoEm:new Date().toISOString(),salvoPor:(usuario&&usuario.email)||''});
+  if(i>=0) EFE.registros[i]=local; else EFE.registros.push(local);
+  guardarBase(); pintarConexao();
+}
+async function enviarFila(){
+  const f=fila(); if(!f.length) return;
+  const restam=[];
+  for(const reg of f){
+    try{ const r=await dados({action:'salvar-efetivo',registro:reg}); EFE=r.efetivo; }
+    catch(err){ restam.push(reg); }
+  }
+  gravarFila(restam);
+  if(restam.length<f.length){
+    offline=false; guardarBase();
+    toast((f.length-restam.length)+' dia(s) enviado(s)');
+    if(atual) trocarContexto();
+    if(!$('pg-hist').classList.contains('hidden')) renderHist();
+  }
+  pintarConexao();
+}
+window.addEventListener('online',()=>{ pintarConexao(); enviarFila(); });
+window.addEventListener('offline',pintarConexao);
+
+async function salvar(txt){
+  const o=obraAtual();
+  const reg=Object.assign({},atual,{obraNome:o?o.nome:'',texto:txt});
+  const st=()=>$('salv-st');
+  try{
+    const r=await dados({action:'salvar-efetivo',registro:reg});
+    EFE=r.efetivo; offline=false; guardarBase();
+    salvoServidor=EFE.registros.find(x=>x.data===reg.data&&String(x.obraId)===String(reg.obraId))||null;
+    try{ localStorage.removeItem(chaveRasc(reg.data,reg.obraId)); }catch(_){}
+    if(st()){ st().textContent='✓ Salvo no histórico'; st().className='status ok'; }
+    pintarStatus(false); pintarConexao();
+  }catch(err){
+    // Sem sinal não pode travar o encarregado: guarda no aparelho e envia depois.
+    enfileirar(reg);
+    salvoServidor=EFE.registros.find(x=>x.data===reg.data&&String(x.obraId)===String(reg.obraId))||null;
+    try{ localStorage.removeItem(chaveRasc(reg.data,reg.obraId)); }catch(_){}
+    if(st()){ st().textContent='📴 Guardado no celular — envia sozinho quando tiver sinal. Pode mandar no WhatsApp normalmente.'; st().className='status'; }
+    pintarStatus(false);
+  }
+}
+function textoPrevia(){ return montarTexto(atual); }
+async function copiar(txt){
+  txt=txt||textoPrevia();
+  try{ await navigator.clipboard.writeText(txt); toast('Copiado'); }
+  catch(e){
+    const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast('Copiado'); }catch(_){ toast('Não consegui copiar'); } t.remove();
+  }
+}
+function whats(txt){ txt=txt||textoPrevia(); location.href='https://wa.me/?text='+encodeURIComponent(txt); }
+
+// ── histórico ──
+function aba(q){
+  $('tab-dia').classList.toggle('on',q==='dia'); $('tab-hist').classList.toggle('on',q==='hist');
+  $('pg-dia').classList.toggle('hidden',q!=='dia'); $('pg-hist').classList.toggle('hidden',q!=='hist');
+  $('barra-dia').classList.toggle('hidden',q!=='dia');
+  if(q==='hist') renderHist();
+  window.scrollTo(0,0);
+}
+// Nome da obra de um registro, mesmo que ela nao esteja mais no cadastro
+// (obra encerrada, ou 'hist:Alphaville' vindo do ajuste do RH).
+function nomeObraReg(r){
+  const o=OBRAS.find(x=>String(x.id)===String(r.obraId));
+  if(o) return o.nome;
+  const cfg=EFE.config.obras[String(r.obraId)];
+  return (cfg&&cfg.nome)||r.obraNome||String(r.obraId).replace(/^hist:/,'');
+}
+const contar=r=>{ const p=r.pessoas.filter(x=>x.presente).length; return {p,a:r.pessoas.length-p}; };
+
+function renderHist(){
+  const oid=$('h-obra').value, geral=oid===GERAL;
+  // Ajuste parcial do RH fica fora: nao e o efetivo do dia, so uma correcao.
+  const l=EFE.registros.filter(r=>!r.parcial&&(geral||String(r.obraId)===oid))
+    .sort((a,b)=>a.data<b.data?1:a.data>b.data?-1:nomeObraReg(a).localeCompare(nomeObraReg(b),'pt'));
+  if(!l.length){ $('hist-lista').innerHTML='<div class="vazio">Nenhum dia lançado'+(geral?'':' para esta obra')+'.</div>'; return; }
+
+  const item=(r,mostraObra)=>{
+    const c=contar(r);
+    return '<button class="hist-it" onclick="verHist(\''+r.data+'\',\''+esc(String(r.obraId))+'\')"><span style="font-size:22px;width:28px;flex:none;text-align:center">'+esc(r.clima||'')+'</span>'
+      +'<div style="min-width:0">'
+        +(mostraObra
+          ? '<div class="d">'+esc(nomeObraReg(r))+'</div><div class="dia" style="margin:0">'+(c.a?c.a+' ausente'+(c.a>1?'s':''):'sem ausentes')+'</div>'
+          : '<div class="d">'+isoParaBR(r.data)+'</div><div class="dia" style="margin:0">'+diaSemana(r.data)+(c.a?' · '+c.a+' ausente'+(c.a>1?'s':''):'')+'</div>')
+      +'</div>'
+      +'<div class="n"><b>'+c.p+'</b><small>'+(r.pendente?'📴 a enviar':'presentes')+'</small></div></button>';
+  };
+  if(!geral){ $('hist-lista').innerHTML=l.map(r=>item(r,false)).join(''); return; }
+
+  // Geral: um bloco por data, com o total do dia e as obras embaixo.
+  const datas=[...new Set(l.map(r=>r.data))];
+  $('hist-lista').innerHTML=datas.map(d=>{
+    const doDia=l.filter(r=>r.data===d);
+    const tot=doDia.reduce((t,r)=>{ const c=contar(r); t.p+=c.p; t.a+=c.a; return t; },{p:0,a:0});
+    return '<div class="hist-dia">'
+      +'<button class="hist-dia-cab" onclick="verResumoDia(\''+d+'\')">'
+        +'<div><div class="d">'+isoParaBR(d)+'</div><div class="dia" style="margin:0">'+diaSemana(d)+' · '+doDia.length+' obra'+(doDia.length>1?'s':'')+(tot.a?' · '+tot.a+' ausente'+(tot.a>1?'s':''):'')+'</div></div>'
+        +'<div class="n"><b>'+tot.p+'</b><small>no dia ›</small></div>'
+      +'</button>'
+      +doDia.map(r=>item(r,true)).join('')
+    +'</div>';
+  }).join('');
+}
+function verHist(data,oid){
+  const r=EFE.registros.find(x=>x.data===data&&String(x.obraId)===String(oid)&&!x.parcial); if(!r) return;
+  const txt=montarTexto(r);
+  window._histTxt=txt;
+  abrirFolha('<h2>'+esc(nomeObraReg(r))+' · '+isoParaBR(data)+'</h2><div class="corpo"><div class="previa">'+esc(txt)+'</div>'
+    +'<div class="dia">Salvo por '+esc(r.salvoPor||'—')+'</div></div>'
+    +'<div class="pe">'+(OBRAS.some(o=>String(o.id)===String(oid))?'<button class="btn sec" onclick="abrirNoDia(\''+data+'\',\''+esc(String(oid))+'\')">Editar</button>':'')
+    +'<button class="btn sec" onclick="copiar(window._histTxt)">Copiar</button>'
+    +'<button class="btn zap" onclick="whats(window._histTxt)">WhatsApp</button></div>');
+}
+// Resumo consolidado do dia (todas as obras) — o que o escritorio quer ver de uma vez.
+function textoResumoDia(data){
+  const doDia=EFE.registros.filter(r=>r.data===data&&!r.parcial)
+    .sort((a,b)=>nomeObraReg(a).localeCompare(nomeObraReg(b),'pt'));
+  let tp=0;
+  const linhas=doDia.map(r=>{
+    const c=contar(r); tp+=c.p;
+    const aus=ordenar(r.pessoas.filter(x=>!x.presente)).map(x=>x.nome+(x.motivo?' – '+x.motivo:''));
+    return '👷🚧 '+nomeObraReg(r)+': '+c.p+(aus.length?'\n   Ausentes: '+aus.join(', '):'');
+  });
+  return ['Efetivo CMR — geral.','📅 '+isoParaBR(data),diaSemana(data),''].concat(linhas).concat(['','*Total no dia: '+tp+'*']).join('\n');
+}
+function verResumoDia(data){
+  const txt=textoResumoDia(data);
+  window._histTxt=txt;
+  abrirFolha('<h2>Todas as obras · '+isoParaBR(data)+'</h2><div class="corpo"><div class="previa">'+esc(txt)+'</div></div>'
+    +'<div class="pe"><button class="btn sec" onclick="copiar(window._histTxt)">Copiar</button>'
+    +'<button class="btn zap" onclick="whats(window._histTxt)">WhatsApp</button></div>');
+}
+function abrirNoDia(data,oid){
+  fecharFolha(); $('f-obra').value=String(oid); $('f-data').value=data; aba('dia'); trocarContexto();
+}
+
+// ── instalação na tela inicial ──
+// Escopo '/efetivo' de propósito: o service worker não pode cachear o Sistema RH
+// (index.html), senão o pessoal do escritório ficaria com versão velha em cache.
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/efetivo-sw.js',{scope:'/efetivo'}).catch(()=>{}));
+}
+const instalado=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+const ehIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+window.addEventListener('beforeinstallprompt',ev=>{
+  ev.preventDefault(); promptInstalar=ev;
+  if(!instalado()) $('banner-inst').classList.remove('hidden');
+});
+window.addEventListener('appinstalled',()=>{ $('banner-inst').classList.add('hidden'); promptInstalar=null; toast('App instalado'); });
+async function instalar(){
+  if(promptInstalar){
+    promptInstalar.prompt();
+    const r=await promptInstalar.userChoice.catch(()=>null);
+    if(r&&r.outcome==='accepted') $('banner-inst').classList.add('hidden');
+    promptInstalar=null;
+    return;
+  }
+  abrirFolha('<h2>Instalar na tela inicial</h2><div class="corpo">'
+    +(ehIOS()
+      ? '<ol class="passos"><li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima), na barra de baixo do Safari.</li>'
+        +'<li>Role e toque em <b>Adicionar à Tela de Início</b>.</li>'
+        +'<li>Toque em <b>Adicionar</b>. O ícone da CMR aparece junto com os outros apps.</li></ol>'
+      : '<ol class="passos"><li>Toque no menu <b>⋮</b> do Chrome, no canto de cima.</li>'
+        +'<li>Toque em <b>Instalar app</b> (ou "Adicionar à tela inicial").</li>'
+        +'<li>Confirme. O ícone da CMR aparece junto com os outros apps.</li></ol>')
+    +'<p class="dia">Depois de instalado ele abre em tela cheia, sem barra de navegador, e funciona mesmo sem sinal na obra.</p>'
+    +'</div><div class="pe"><button class="btn pri" onclick="fecharFolha()">Entendi</button></div>');
+}
+
+// ── partida ──
+(function(){
+  try{ token=localStorage.getItem(TOKEN_KEY); usuario=JSON.parse(localStorage.getItem(USER_KEY)||'null'); }catch(_){}
+  if(token) iniciar(); else $('tela-login').classList.remove('hidden');
+  // iPhone não dispara beforeinstallprompt: mostra o botão com as instruções.
+  if(ehIOS()&&!instalado()) $('banner-inst').classList.remove('hidden');
+})();
+</script>
+</body>
+</html>

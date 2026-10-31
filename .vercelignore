@@ -1,0 +1,9 @@
+_harness.js
+_e2e.js
+_dados.test.js
+.env.prod
+.env.local
+node_modules
+_e2e_dados.js
+_diag_persist.js
+api/*.bak-*

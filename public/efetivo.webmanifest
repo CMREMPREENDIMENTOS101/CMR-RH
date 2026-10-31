@@ -1,0 +1,25 @@
+{
+  "name": "Efetivo CMR",
+  "short_name": "Efetivo",
+  "start_url": "/efetivo.html",
+  "scope": "/efetivo",
+  "display": "standalone",
+  "background_color": "#f2f2f4",
+  "theme_color": "#C8102E",
+  "icons": [
+    {
+      "src": "/efetivo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/efetivo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "id": "/efetivo.html",
+  "lang": "pt-BR",
+  "orientation": "portrait",
+  "description": "Lançamento do efetivo diário de obra da CMR Empreendimentos"
+}
