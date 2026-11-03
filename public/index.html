@@ -6238,10 +6238,9 @@ function qoRender(){
   if(!de||!ate){ box.innerHTML='<div class="qo-vazio">Escolha o período.</div>'; return; }
   if(de>ate){ const t=de; de=ate; ate=t; }
 
-  // Calendario completo do periodo (ate 93 dias, para o quadro nao explodir).
+  // Calendario completo do periodo; o quadro rola na horizontal.
   const dias=[];
-  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate && dias.length<93; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
-  const cortado=qoIso(new Date(dias[dias.length-1]+'T00:00:00'))<ate;
+  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
   const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
   if(filtroIds&&!filtroIds.size){ box.innerHTML='<div class="qo-vazio">Nenhum funcionário com esse nome.</div>'; return; }
 
@@ -6261,10 +6260,13 @@ function qoRender(){
 
   const fds=d=>{ const w=new Date(d+'T00:00:00').getDay(); return w===0||w===6; };
   const pico=Math.max(1,...lista.flatMap(([,r])=>[...r.porDia.values()]));
-  const cab='<tr><th class="qo-n"></th>'+dias.map(d=>'<th class="qo-d'+(fds(d)?' qo-fds':'')+'" title="'+qoDataBR(d)+'">'+d.slice(8,10)+'</th>').join('')+'<th></th></tr>';
+  // Linha dos meses (colspan) em cima dos dias, para periodo de varios meses.
+  const blocosMes=[]; dias.forEach(d=>{ const k=d.slice(0,7), u=blocosMes[blocosMes.length-1]; if(u&&u.k===k) u.n++; else blocosMes.push({k,n:1}); });
+  const cabMes='<tr><th class="qo-n"></th>'+blocosMes.map(b=>'<th class="qo-d" colspan="'+b.n+'" style="text-align:left;color:var(--text);font-size:10px;font-weight:700;border-left:2px solid var(--border)">'
+    +QO_MESES[+b.k.slice(5,7)-1]+' '+b.k.slice(0,4)+'</th>').join('')+'<th></th></tr>';
+  const cab=cabMes+'<tr><th class="qo-n"></th>'+dias.map(d=>'<th class="qo-d'+(fds(d)?' qo-fds':'')+'" title="'+qoDataBR(d)+'">'+d.slice(8,10)+'</th>').join('')+'<th></th></tr>';
 
-  box.innerHTML=(cortado?'<div class="qo-vazio" style="padding:0 0 8px">Período longo: mostrando só os primeiros 93 dias.</div>':'')
-  +lista.map(([o,r])=>{
+  box.innerHTML=lista.map(([o,r])=>{
     const cor=qoCor(o);
     const ids=[...new Set([...r.pres.keys(),...r.aus.keys()])]
       .sort((a,b)=>((r.pres.get(b)||new Set()).size-(r.pres.get(a)||new Set()).size)||qoNome(a).localeCompare(qoNome(b),'pt-BR'));
@@ -6298,7 +6300,7 @@ function qoImprimir(){
   const busca=qoNorm(document.getElementById('qo-func').value.trim());
   const todos=PRESENCA_NOMES.dias||{};
   const dias=[];
-  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate && dias.length<93; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
+  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
   const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
 
   // id -> dia -> {obras:Set, falta:bool}
@@ -6323,16 +6325,30 @@ function qoImprimir(){
     return '<td class="ob" style="background:'+fundo+'"><span>'+obras.map(esc).join(' / ')+'</span></td>';
   };
   const contaObra={};
-  const linhas=ids.map(id=>{
-    const m=mapa.get(id); let tot=0;
-    const tds=dias.map(d=>{
-      const c=m.get(d);
-      if(c&&c.obras.size){ tot++; c.obras.forEach(o=>{ contaObra[o]=(contaObra[o]||0)+1; }); return celObra([...c.obras]); }
-      if(c&&c.falta) return '<td class="x'+(fds(d)?' fds':'')+'">F</td>';
-      return '<td class="'+(fds(d)?'fds':'')+'"></td>';
+  // Uma tabela por mes (cada uma numa pagina): periodo longo nao espreme as colunas.
+  // No mes, so entra quem tem algum registro nele.
+  const meses=[]; dias.forEach(d=>{ const k=d.slice(0,7), u=meses[meses.length-1]; if(u&&u.k===k) u.dias.push(d); else meses.push({k,dias:[d]}); });
+  const tabelaMes=({k,dias:dm})=>{
+    const idsMes=ids.filter(id=>dm.some(d=>mapa.get(id).has(d)));
+    if(!idsMes.length) return '';
+    const linhas=idsMes.map(id=>{
+      const m=mapa.get(id); let tot=0;
+      const tds=dm.map(d=>{
+        const c=m.get(d);
+        if(c&&c.obras.size){ tot++; c.obras.forEach(o=>{ contaObra[o]=(contaObra[o]||0)+1; }); return celObra([...c.obras]); }
+        if(c&&c.falta) return '<td class="x'+(fds(d)?' fds':'')+'">F</td>';
+        return '<td class="'+(fds(d)?'fds':'')+'"></td>';
+      }).join('');
+      return '<tr><th class="nm">'+esc(qoNome(id))+'</th>'+tds+'<td class="tt">'+tot+'</td></tr>';
     }).join('');
-    return '<tr><th class="nm">'+esc(qoNome(id))+'</th>'+tds+'<td class="tt">'+tot+'</td></tr>';
-  }).join('');
+    return '<div class="mes"><h2>'+QO_MESES[+k.slice(5,7)-1]+' de '+k.slice(0,4)
+      +' <span>'+qoDataBR(dm[0])+' a '+qoDataBR(dm[dm.length-1])+' · '+idsMes.length+' colaborador(es)</span></h2>'
+      +'<table><colgroup><col class="c-nm">'+dm.map(()=>'<col>').join('')+'<col class="c-tt"></colgroup>'
+      +'<thead><tr><th style="text-align:left;padding-left:5px">Colaborador</th>'
+      +dm.map(d=>'<th class="'+(fds(d)?'fds':'')+'">'+d.slice(8,10)+'<small>'+SEM[new Date(d+'T00:00:00').getDay()]+'</small></th>').join('')
+      +'<th class="tt">Dias</th></tr></thead><tbody>'+linhas+'</tbody></table></div>';
+  };
+  const tabelas=meses.map(tabelaMes).join('');
 
   const per=qoDataBR(de)+' a '+qoDataBR(dias[dias.length-1]);
   const filtros=[obraF?'Obra: '+esc(obraF):'', busca?'Colaborador: '+esc(document.getElementById('qo-func').value.trim()):''].filter(Boolean).join(' · ');
@@ -6347,6 +6363,8 @@ function qoImprimir(){
     +'.cab h1{font-size:14px;letter-spacing:1px;text-transform:uppercase}'
     +'.cab .sub{font-size:9px;color:#555;margin-top:2px}.cab .dt{font-size:9px;color:#555;text-align:right;white-space:nowrap}'
     +'h2{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#C8102E;margin:0 0 4px}'
+    +'h2 span{font-weight:normal;text-transform:none;letter-spacing:0;color:#666;font-size:9px;margin-left:6px}'
+    +'.mes{margin-bottom:8px}.mes+.mes{break-before:page;page-break-before:always}'
     +'table{width:100%;border-collapse:collapse;table-layout:fixed}'
     +'col.c-nm{width:150px}col.c-tt{width:30px}'
     +'th,td{border:1px solid #d4d4d8;text-align:center;font-size:8px}'
@@ -6369,10 +6387,7 @@ function qoImprimir(){
     +'<div class="sub">CMR Empreendimentos · Período: '+per+(filtros?' · '+filtros:'')+' · '+ids.length+' colaborador(es)</div></div>'
     +'<div class="dt">Emitido em '+new Date().toLocaleDateString('pt-BR')+'<br>'+esc((authUser&&(authUser.name||authUser.email))||'')+'</div></div>'
     +'<div class="leg"><b>Obras:</b>'+obrasLeg.map(o=>'<span><i style="background:'+qoCor(o)+'"></i>'+esc(o)+' <span style="color:#777">('+(contaObra[o]||0)+' pessoas-dia)</span></span>').join('')+'</div>'
-    +'<table><colgroup><col class="c-nm">'+dias.map(()=>'<col>').join('')+'<col class="c-tt"></colgroup>'
-    +'<thead><tr><th style="text-align:left;padding-left:5px">Colaborador</th>'
-    +dias.map(d=>'<th class="'+(fds(d)?'fds':'')+'">'+d.slice(8,10)+'<small>'+SEM[new Date(d+'T00:00:00').getDay()]+'</small></th>').join('')
-    +'<th class="tt">Dias</th></tr></thead><tbody>'+linhas+'</tbody></table>'
+    +tabelas
     +'<div class="nota"><b>F</b> = declarado ausente · vazio = não constou em nenhuma lista · cinza = sábado/domingo · célula dividida = esteve em duas obras no dia · "Dias" = dias presente em alguma obra.</div>'
     +'<div class="nota">Fonte: listas de efetivo diário (WhatsApp e app Efetivo CMR). Documento de apoio — não substitui o controle de ponto.</div>'
     +'</body></html>');
