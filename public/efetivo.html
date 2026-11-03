@@ -337,8 +337,17 @@ function sair(expirou){
 // ── carga ──
 // A obra costuma ficar sem sinal. Tudo que foi baixado uma vez fica no aparelho,
 // então o app abre e lança o efetivo offline; o envio sai da fila quando voltar.
+// Desligados: id -> data do desligamento (ISO, '' se sem data). Saem da lista
+// do dia a partir dessa data, mesmo vindo de rascunho, dia salvo ou "extra".
+let DESL={};
+function dataISO(s){
+  s=String(s||'').trim();
+  const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):s.slice(0,10);
+}
+const desligadoEm=(id,data)=>{ const d=DESL[String(id)]; return d!==undefined&&(!d||data>=d); };
 function guardarBase(){
-  try{ localStorage.setItem(BASE_KEY,JSON.stringify({EMP,OBRAS,EFE,em:new Date().toISOString()})); }catch(_){}
+  try{ localStorage.setItem(BASE_KEY,JSON.stringify({EMP,OBRAS,EFE,DESL,em:new Date().toISOString()})); }catch(_){}
 }
 function lerBase(){
   try{ return JSON.parse(localStorage.getItem(BASE_KEY)||'null'); }catch(_){ return null; }
@@ -348,14 +357,16 @@ async function carregarTudo(){
     const [c,o,f]=await Promise.all([
       dados({action:'carregar'}), dados({action:'carregar-obras'}), dados({action:'carregar-efetivo'})
     ]);
-    EMP=(c.colaboradores||[]).filter(e=>!e.desligado);
+    const todos=c.colaboradores||[];
+    DESL={}; todos.filter(e=>e.desligado).forEach(e=>{ DESL[String(e.id)]=dataISO(e.dtDesl); });
+    EMP=todos.filter(e=>!e.desligado);
     OBRAS=(o.obras||[]).slice();
     EFE=f.efetivo||EFE;
     offline=false;
   }catch(err){
     const b=lerBase();
     if(!b) throw err;                       // primeira vez precisa de internet
-    EMP=b.EMP||[]; OBRAS=b.OBRAS||[]; EFE=b.EFE||EFE; offline=true;
+    EMP=b.EMP||[]; OBRAS=b.OBRAS||[]; EFE=b.EFE||EFE; DESL=b.DESL||{}; offline=true;
   }
   // obra que só existe no cadastro de alguém também aparece
   const nomes=new Set(OBRAS.map(x=>x.nome));
@@ -437,6 +448,7 @@ function trocarContexto(){
   else if(salvoServidor) atual=JSON.parse(JSON.stringify(salvoServidor));
   else atual=novoDia(data,o);
   atual.data=data; atual.obraId=String(o.id);
+  atual.pessoas=(atual.pessoas||[]).filter(p=>p.id==null||!desligadoEm(p.id,data));
   renderDia();
 }
 // Parte da equipe do dia e sobrepoe o que o RH corrigiu. Ao salvar, o registro
