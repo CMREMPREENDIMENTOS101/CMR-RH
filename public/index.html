@@ -275,6 +275,38 @@ header{background:var(--dark);border-bottom:2px solid var(--red);padding:0 32px;
 .sg-enviar:disabled{opacity:.5;cursor:default}
 .sg-respondendo{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:6px 10px}
 .sg-erro{font-size:12px;color:var(--danger,#c81b1b);background:rgba(200,27,27,.08);border:1px solid rgba(200,27,27,.25);border-radius:8px;padding:6px 10px}
+/* QUEM ESTAVA EM CADA OBRA (Historico de Efetivo) */
+.qo-filtros{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:12px 0 14px}
+.qo-filtros label{display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.qo-filtros input,.qo-filtros select{background:var(--black);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;font-size:13px;min-width:170px;text-transform:none;letter-spacing:0}
+.qo-obra{border:1px solid var(--border);border-left:4px solid var(--qo);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:var(--panel)}
+.qo-scroll{overflow-x:auto}
+.qo-mx{border-collapse:separate;border-spacing:2px;font-size:11px}
+.qo-mx th.qo-n{position:sticky;left:0;background:var(--panel);text-align:left;font-weight:500;padding-right:10px;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis;z-index:1}
+.qo-mx th.qo-d{font-weight:500;color:var(--muted);font-size:9px;text-align:center;min-width:18px}
+.qo-mx th.qo-d.qo-fds{color:var(--danger)}
+.qo-mx td{width:18px;height:18px;border-radius:3px;background:var(--row-line,rgba(127,127,127,.08))}
+.qo-mx td.qo-fds{background:rgba(127,127,127,.16)}
+.qo-mx td.qo-on{background:var(--qo)}
+.qo-mx td.qo-off{background:transparent;outline:1px dashed var(--qo);outline-offset:-2px}
+.qo-mx td.qo-bar{height:34px;background:transparent;vertical-align:bottom;padding:0}
+.qo-mx td.qo-bar i{display:block;background:color-mix(in srgb,var(--qo) 55%,transparent);border-radius:2px 2px 0 0}
+.qo-mx td.qo-bar b{display:block;font-size:8px;text-align:center;color:var(--muted);font-weight:500}
+.qo-mx td.qo-tot{background:transparent;width:auto;padding-left:8px;color:var(--muted);white-space:nowrap}
+.qo-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.qo-card{border:1px solid var(--border);border-left:4px solid var(--qo);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.qo-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.qo-cab b{font-size:14px;color:var(--qo)}
+.qo-cab span{font-size:11px;color:var(--muted)}
+.qo-pes{display:flex;flex-wrap:wrap;gap:5px}
+.qo-p{font-size:12px;padding:3px 9px;border-radius:12px;background:color-mix(in srgb,var(--qo) 14%,transparent);border:1px solid color-mix(in srgb,var(--qo) 35%,transparent)}
+.qo-p.qo-aus{background:transparent;border-style:dashed;color:var(--muted);text-decoration:line-through}
+.qo-p.qo-hit{background:var(--qo);color:#fff;font-weight:700}
+.qo-vazio{font-size:12px;color:var(--muted);padding:14px 0}
+.qo-tab{width:100%;border-collapse:collapse;font-size:12px}
+.qo-tab th,.qo-tab td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+.qo-tab th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.qo-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .sg-clip{width:42px;height:42px;flex-shrink:0;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
 .sg-anexo{position:relative;align-self:flex-start}
 .sg-anexo img{max-height:90px;max-width:160px;border-radius:8px;border:1px solid var(--border);display:block}
@@ -1895,6 +1927,20 @@ label.sim-ad input.form-input{min-width:130px}
       <span>Faixa cinza = sábado e domingo</span>
       <span>Data esmaecida e coluna vazia = nenhuma obra lançou efetivo no dia</span>
     </div>
+  </div>
+  <div class="hx-mx">
+    <div class="hx-graf-tit">Quem estava em cada obra</div>
+    <div class="hx-graf-sub">Um quadro por obra: cada linha é um colaborador, cada coluna um dia do período. Quadrado cheio = presente, tracejado = declarado ausente. A barra no topo é quantos estavam na obra no dia. Fonte: listas de nomes (WhatsApp ou app Efetivo).</div>
+    <div class="qo-filtros">
+      <label>De<input type="date" id="qo-de" onchange="qoRender()"></label>
+      <label>Até<input type="date" id="qo-ate" onchange="qoRender()"></label>
+      <label>Atalho<select id="qo-mes" onchange="qoMes(this.value)"></select></label>
+      <label>Obra<select id="qo-obra" onchange="qoRender()"></select></label>
+      <label>Funcionário<input type="search" id="qo-func" placeholder="Nome…" oninput="qoRender()"></label>
+      <button class="btn btn-secondary" onclick="qoLimpar()">Limpar</button>
+      <button class="btn btn-primary" onclick="qoImprimir()" title="Planilha simples: colaborador × dia, com a obra em cada dia">&#9113; Imprimir para contabilidade</button>
+    </div>
+    <div id="qo-res"></div>
   </div>
   <div class="hx-board" id="hx-board"></div>
   <div class="hx-nota" id="hx-nota"></div>
@@ -6136,9 +6182,208 @@ function printHH(){
   setTimeout(()=>w.print(),400);
 }
 
+// ══════════════════════════════════════════════════════════════
+// QUEM ESTAVA EM CADA OBRA
+// Le PRESENCA_NOMES.dias (listas do WhatsApp + app Efetivo, ja mescladas):
+//   dias[AAAA-MM-DD][obra] = [ids presentes, n. de nomes, ids em AUSENTES]
+// Sem funcionario na busca: um card por obra no dia escolhido. Com busca:
+// tabela dia a dia de onde a pessoa estava (filtrada por obra, se escolhida).
+// Cores = as mesmas das obras nos graficos (HX_CORES).
+// ══════════════════════════════════════════════════════════════
+const qoCor=o=>HX_CORES[o]||'#8a8f98';
+const qoNome=id=>{ const e=EMP.find(x=>x.id===id); return e?e.nome:'#'+id; };
+const qoDataBR=iso=>iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4);
+const qoNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+const QO_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function qoIso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// Atalho de mes: preenche De/Ate com o mes inteiro.
+function qoMes(ym){
+  if(!ym) return;
+  const [a,m]=ym.split('-').map(Number);
+  document.getElementById('qo-de').value=ym+'-01';
+  document.getElementById('qo-ate').value=qoIso(new Date(a,m,0));
+  qoRender();
+}
+
+function qoPreparar(){
+  const dias=Object.keys(PRESENCA_NOMES.dias||{}).sort();
+  const de=document.getElementById('qo-de'), ate=document.getElementById('qo-ate'), sel=document.getElementById('qo-obra');
+  if(!de||!sel) return;
+  const meses=[...new Set(dias.map(d=>d.slice(0,7)))].reverse();
+  document.getElementById('qo-mes').innerHTML='<option value="">Mês…</option>'
+    +meses.map(ym=>'<option value="'+ym+'">'+QO_MESES[+ym.slice(5,7)-1]+' '+ym.slice(0,4)+'</option>').join('');
+  // Abre no mes do ultimo lancamento.
+  if(dias.length&&!de.value){ const ult=dias[dias.length-1]; de.value=ult.slice(0,7)+'-01'; ate.value=ult; }
+  const obras=[...new Set(dias.flatMap(d=>Object.keys(PRESENCA_NOMES.dias[d])))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const atual=sel.value;
+  sel.innerHTML='<option value="">Todas as obras</option>'+obras.map(o=>'<option'+(o===atual?' selected':'')+'>'+esc(o)+'</option>').join('');
+  qoRender();
+}
+
+function qoLimpar(){
+  document.getElementById('qo-obra').value='';
+  document.getElementById('qo-func').value='';
+  document.getElementById('qo-de').value='';
+  qoPreparar();
+}
+
+function qoRender(){
+  const box=document.getElementById('qo-res'); if(!box) return;
+  let de=document.getElementById('qo-de').value, ate=document.getElementById('qo-ate').value;
+  const obraF=document.getElementById('qo-obra').value;
+  const busca=qoNorm(document.getElementById('qo-func').value.trim());
+  const todos=PRESENCA_NOMES.dias||{};
+  if(!de||!ate){ box.innerHTML='<div class="qo-vazio">Escolha o período.</div>'; return; }
+  if(de>ate){ const t=de; de=ate; ate=t; }
+
+  // Calendario completo do periodo (ate 93 dias, para o quadro nao explodir).
+  const dias=[];
+  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate && dias.length<93; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
+  const cortado=qoIso(new Date(dias[dias.length-1]+'T00:00:00'))<ate;
+  const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
+  if(filtroIds&&!filtroIds.size){ box.innerHTML='<div class="qo-vazio">Nenhum funcionário com esse nome.</div>'; return; }
+
+  // Obra -> {pres: Map(id -> Set dias), aus: Map(id -> Set dias), porDia: Map(dia -> n)}
+  const obras=new Map();
+  dias.forEach(d=>Object.entries(todos[d]||{}).forEach(([o,v])=>{
+    if(obraF&&o!==obraF) return;
+    const r=obras.get(o)||{pres:new Map(),aus:new Map(),porDia:new Map()};
+    (v[0]||[]).forEach(id=>{ if(!filtroIds||filtroIds.has(id)) (r.pres.get(id)||r.pres.set(id,new Set()).get(id)).add(d); });
+    (v[2]||[]).forEach(id=>{ if(!filtroIds||filtroIds.has(id)) (r.aus.get(id)||r.aus.set(id,new Set()).get(id)).add(d); });
+    r.porDia.set(d,(v[0]||[]).length);
+    obras.set(o,r);
+  }));
+  const lista=[...obras.entries()].filter(([,r])=>!filtroIds||r.pres.size||r.aus.size)
+    .sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+  if(!lista.length){ box.innerHTML='<div class="qo-vazio">Sem listas de nomes'+(obraF?' de '+esc(obraF):'')+(busca?' com esse funcionário':'')+' entre '+qoDataBR(de)+' e '+qoDataBR(ate)+'.</div>'; return; }
+
+  const fds=d=>{ const w=new Date(d+'T00:00:00').getDay(); return w===0||w===6; };
+  const pico=Math.max(1,...lista.flatMap(([,r])=>[...r.porDia.values()]));
+  const cab='<tr><th class="qo-n"></th>'+dias.map(d=>'<th class="qo-d'+(fds(d)?' qo-fds':'')+'" title="'+qoDataBR(d)+'">'+d.slice(8,10)+'</th>').join('')+'<th></th></tr>';
+
+  box.innerHTML=(cortado?'<div class="qo-vazio" style="padding:0 0 8px">Período longo: mostrando só os primeiros 93 dias.</div>':'')
+  +lista.map(([o,r])=>{
+    const cor=qoCor(o);
+    const ids=[...new Set([...r.pres.keys(),...r.aus.keys()])]
+      .sort((a,b)=>((r.pres.get(b)||new Set()).size-(r.pres.get(a)||new Set()).size)||qoNome(a).localeCompare(qoNome(b),'pt-BR'));
+    const barras='<tr><th class="qo-n" style="font-size:10px;color:var(--muted)">Presentes no dia</th>'+dias.map(d=>{
+      const n=r.porDia.get(d);
+      return '<td class="qo-bar">'+(n!=null?'<b>'+n+'</b><i style="height:'+Math.max(2,Math.round(24*n/pico))+'px"></i>':'')+'</td>';
+    }).join('')+'<td></td></tr>';
+    const linhas=ids.map(id=>{
+      const p=r.pres.get(id)||new Set(), a=r.aus.get(id)||new Set();
+      return '<tr><th class="qo-n" title="'+esc(qoNome(id))+'">'+esc(qoNome(id))+'</th>'+dias.map(d=>{
+        const cls=p.has(d)?'qo-on':a.has(d)?'qo-off':(fds(d)?'qo-fds':'');
+        const tip=qoDataBR(d)+' · '+(p.has(d)?'presente':a.has(d)?'ausente':r.porDia.has(d)?'fora da lista':'sem lançamento');
+        return '<td class="'+cls+'" title="'+tip+'"></td>';
+      }).join('')+'<td class="qo-tot">'+p.size+' dia(s)</td></tr>';
+    }).join('');
+    const diasLanc=dias.filter(d=>r.porDia.has(d)).length;
+    return '<div class="qo-obra" style="--qo:'+cor+'"><div class="qo-cab"><b>'+esc(o)+'</b>'
+      +'<span>'+ids.length+' colaborador(es) · '+diasLanc+' dia(s) com lista · '+qoDataBR(de)+' a '+qoDataBR(dias[dias.length-1])+'</span></div>'
+      +'<div class="qo-scroll"><table class="qo-mx">'+cab+barras+linhas+'</table></div></div>';
+  }).join('');
+}
+
+// Planilha para a contabilidade: uma linha por colaborador, uma coluna por dia,
+// e na celula a sigla da obra onde estava (legenda embaixo). F = declarado
+// ausente; vazio = nao apareceu em nenhuma lista. Respeita os filtros da tela.
+function qoImprimir(){
+  let de=document.getElementById('qo-de').value, ate=document.getElementById('qo-ate').value;
+  if(!de||!ate){ alert('Escolha o período antes de imprimir.'); return; }
+  if(de>ate){ const t=de; de=ate; ate=t; }
+  const obraF=document.getElementById('qo-obra').value;
+  const busca=qoNorm(document.getElementById('qo-func').value.trim());
+  const todos=PRESENCA_NOMES.dias||{};
+  const dias=[];
+  for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate && dias.length<93; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
+  const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
+
+  // id -> dia -> {obras:Set, falta:bool}
+  const mapa=new Map(), obrasUsadas=new Set();
+  const cel=(id,d)=>{ const m=mapa.get(id)||mapa.set(id,new Map()).get(id); return m.get(d)||m.set(d,{obras:new Set(),falta:false}).get(d); };
+  dias.forEach(d=>Object.entries(todos[d]||{}).forEach(([o,v])=>{
+    if(obraF&&o!==obraF) return;
+    (v[0]||[]).forEach(id=>{ if(!filtroIds||filtroIds.has(id)){ cel(id,d).obras.add(o); obrasUsadas.add(o); } });
+    (v[2]||[]).forEach(id=>{ if(!filtroIds||filtroIds.has(id)) cel(id,d).falta=true; });
+  }));
+  if(!mapa.size){ alert('Nada para imprimir com esses filtros.'); return; }
+
+  const fds=d=>{ const w=new Date(d+'T00:00:00').getDay(); return w===0||w===6; };
+  const SEM=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  const ids=[...mapa.keys()].sort((a,b)=>qoNome(a).localeCompare(qoNome(b),'pt-BR'));
+  const obrasLeg=[...obrasUsadas].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  // Celula pintada na cor da obra, com o nome completo na vertical (cabe na coluna do dia).
+  // Dois locais no mesmo dia: a celula divide a cor ao meio.
+  const celObra=obras=>{
+    const cs=obras.map(o=>qoCor(o));
+    const fundo=cs.length>1?'linear-gradient(90deg,'+cs.map((c,i)=>c+' '+(i*100/cs.length)+'%,'+c+' '+((i+1)*100/cs.length)+'%').join(',')+')':cs[0];
+    return '<td class="ob" style="background:'+fundo+'"><span>'+obras.map(esc).join(' / ')+'</span></td>';
+  };
+  const contaObra={};
+  const linhas=ids.map(id=>{
+    const m=mapa.get(id); let tot=0;
+    const tds=dias.map(d=>{
+      const c=m.get(d);
+      if(c&&c.obras.size){ tot++; c.obras.forEach(o=>{ contaObra[o]=(contaObra[o]||0)+1; }); return celObra([...c.obras]); }
+      if(c&&c.falta) return '<td class="x'+(fds(d)?' fds':'')+'">F</td>';
+      return '<td class="'+(fds(d)?'fds':'')+'"></td>';
+    }).join('');
+    return '<tr><th class="nm">'+esc(qoNome(id))+'</th>'+tds+'<td class="tt">'+tot+'</td></tr>';
+  }).join('');
+
+  const per=qoDataBR(de)+' a '+qoDataBR(dias[dias.length-1]);
+  const filtros=[obraF?'Obra: '+esc(obraF):'', busca?'Colaborador: '+esc(document.getElementById('qo-func').value.trim()):''].filter(Boolean).join(' · ');
+  const w=window.open('','_blank');
+  if(!w){ alert('O navegador bloqueou a janela de impressão. Libere os pop-ups para este site.'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Efetivo por obra — '+per+' — CMR</title><style>'
+    +'@page{size:A4 landscape;margin:8mm}'
+    +'*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'body{background:#fff;color:#1f1f23;font-family:Arial,Helvetica,sans-serif;font-size:8.5px;padding:6px}'
+    +'.cab{display:flex;align-items:center;gap:12px;border-bottom:2px solid #C8102E;padding-bottom:7px;margin-bottom:8px}'
+    +'.cab img{height:36px;width:auto;object-fit:contain}.cab .t{flex:1}'
+    +'.cab h1{font-size:14px;letter-spacing:1px;text-transform:uppercase}'
+    +'.cab .sub{font-size:9px;color:#555;margin-top:2px}.cab .dt{font-size:9px;color:#555;text-align:right;white-space:nowrap}'
+    +'h2{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#C8102E;margin:0 0 4px}'
+    +'table{width:100%;border-collapse:collapse;table-layout:fixed}'
+    +'col.c-nm{width:150px}col.c-tt{width:30px}'
+    +'th,td{border:1px solid #d4d4d8;text-align:center;font-size:8px}'
+    +'thead th{background:#f1f1f3;font-weight:bold;color:#333;padding:2px 0}'
+    +'thead th small{display:block;font-weight:normal;font-size:6px;color:#777}'
+    +'thead th.fds{background:#e4e4e8}'
+    +'th.nm{text-align:left;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#f7f7f8;font-weight:normal;font-size:8px}'
+    +'tbody tr{break-inside:avoid;page-break-inside:avoid}'
+    +'td{height:44px;padding:0}td.fds{background:#ececef}'
+    +'td.ob{color:#fff;font-weight:bold}'
+    +'td.ob span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:6.3px;line-height:1.05;max-height:42px;overflow:hidden;text-shadow:0 0 2px rgba(0,0,0,.45)}'
+    +'td.x{color:#C8102E;font-weight:bold;font-size:9px}'
+    +'.tt{font-weight:bold;background:#f1f1f3;font-family:"Courier New",monospace}'
+    +'thead{display:table-header-group}'
+    +'.leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:8.5px;color:#333;margin:8px 0 4px;align-items:center}'
+    +'.leg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-2px}'
+    +'.nota{font-size:8px;color:#666;margin-top:3px}'
+    +'</style></head><body>'
+    +'<div class="cab"><img src="'+location.origin+CMR_LOGO+'" alt="CMR"><div class="t"><h1>Efetivo por obra — colaborador × dia</h1>'
+    +'<div class="sub">CMR Empreendimentos · Período: '+per+(filtros?' · '+filtros:'')+' · '+ids.length+' colaborador(es)</div></div>'
+    +'<div class="dt">Emitido em '+new Date().toLocaleDateString('pt-BR')+'<br>'+esc((authUser&&(authUser.name||authUser.email))||'')+'</div></div>'
+    +'<div class="leg"><b>Obras:</b>'+obrasLeg.map(o=>'<span><i style="background:'+qoCor(o)+'"></i>'+esc(o)+' <span style="color:#777">('+(contaObra[o]||0)+' pessoas-dia)</span></span>').join('')+'</div>'
+    +'<table><colgroup><col class="c-nm">'+dias.map(()=>'<col>').join('')+'<col class="c-tt"></colgroup>'
+    +'<thead><tr><th style="text-align:left;padding-left:5px">Colaborador</th>'
+    +dias.map(d=>'<th class="'+(fds(d)?'fds':'')+'">'+d.slice(8,10)+'<small>'+SEM[new Date(d+'T00:00:00').getDay()]+'</small></th>').join('')
+    +'<th class="tt">Dias</th></tr></thead><tbody>'+linhas+'</tbody></table>'
+    +'<div class="nota"><b>F</b> = declarado ausente · vazio = não constou em nenhuma lista · cinza = sábado/domingo · célula dividida = esteve em duas obras no dia · "Dias" = dias presente em alguma obra.</div>'
+    +'<div class="nota">Fonte: listas de efetivo diário (WhatsApp e app Efetivo CMR). Documento de apoio — não substitui o controle de ponto.</div>'
+    +'</body></html>');
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(),300);
+}
+
 function renderHistorico(){
   const board=document.getElementById('hx-board');
   if(!board) return;
+  qoPreparar();
 
   // Semeia o campo do valor unico na primeira abertura, sem atropelar o que
   // o usuario ja tiver digitado.
