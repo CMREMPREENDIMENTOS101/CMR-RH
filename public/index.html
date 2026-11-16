@@ -8094,19 +8094,32 @@ function ccSetCriterio(v){
 }
 const ccCriterioTxt=c=>c==='proporcional'?'proporcional ao custo direto':'igual entre as obras';
 
+// Adicional de 25% sobre o salario para obra fora de Ponta Grossa. A cidade vem
+// da descricao da obra (ex.: "Campo Mourao/PR"); sem cidade, nao aplica.
+const ADIC_FORA_PG=0.25;
+function obraForaPG(obra){
+  if(!obra||ehEquipeTecnica(obra.nome)) return false;
+  const d=String(obra.desc||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  return !!d&&!d.includes('ponta grossa');
+}
+
 function custoPorCentro(){
   const linhas=colunasKanban().map(c=>{
     const gente=colabsDaColuna(c);
     const cargos={};
     gente.forEach(e=>{ const k=e.cargo||'Sem cargo'; cargos[k]=(cargos[k]||0)+1; });
+    // Obra fora de Ponta Grossa: adicional de 25% sobre o salario de todos.
+    const fora=obraForaPG(c.obra);
+    const adicional=fora?gente.reduce((t,e)=>t+valorSalario(e.sal)*ADIC_FORA_PG,0):0;
     return {
+      fora, adicional,
       chave:c.chave, nome:c.nome, semObra:!!c.semObra, geral:!!c.geral,
       naoCadastrada:!c.obra&&!c.semObra,
       gente,
       n:gente.length,
-      sal:gente.reduce((t,e)=>t+valorSalario(e.sal)+valorSalario(e.bonus),0),
+      sal:gente.reduce((t,e)=>t+valorSalario(e.sal)+valorSalario(e.bonus),0)+adicional,
       vales:gente.reduce((t,e)=>t+valesMensais(e),0),
-      total:gente.reduce((t,e)=>t+custoMensal(e),0),
+      total:gente.reduce((t,e)=>t+custoMensal(e),0)+adicional,
       rateio:0,
       composicao:Object.entries(cargos)
         .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR'))
@@ -8412,7 +8425,8 @@ function renderKanban(){
     const contagem=kbBusca
       ? visiveis.length+' de '+gente.length
       : gente.length+' colaborador'+(gente.length===1?'':'es');
-    const custoCol=gente.reduce((t,e)=>t+custoMensal(e),0);
+    const adicCol=obraForaPG(c.obra)?gente.reduce((t,e)=>t+valorSalario(e.sal)*ADIC_FORA_PG,0):0;
+    const custoCol=gente.reduce((t,e)=>t+custoMensal(e),0)+adicCol;
 
     return '<div class="kb-col'+(kbBusca&&!visiveis.length?' kb-sem-resultado':'')+'" data-col="'+esc(c.chave)+'"'
       +' ondragover="kbDragOver(event,this)" ondragleave="kbDragLeave(this)"'
@@ -8427,6 +8441,7 @@ function renderKanban(){
           +'<div class="kb-col-nome">'+esc(c.nome)+'</div>'
           +'<div class="kb-col-meta">'+contagem+' · '+meta+'</div>'
           +'<div class="kb-col-custo">'+fmtBRLcurto(custoCol)+'/mês'
+            +(adicCol>0?' <span class="kb-col-rat" title="Adicional de 25% sobre o salário (obra fora de Ponta Grossa), já somado">incl. '+fmtBRLcurto(adicCol)+' adic. 25%</span>':'')
             +(c.geral
               ? (ccRat.recebem&&custoCol>0?' <span class="kb-col-rat">→ rateado entre '+ccRat.recebem+' obras</span>':'')
               : (rateioDe(c.chave)>0.005?' <span class="kb-col-rat">+ '+fmtBRLcurto(rateioDe(c.chave))+' rateio</span>':''))
