@@ -6229,18 +6229,46 @@ function qoLimpar(){
   qoPreparar();
 }
 
+// Cada colaborador fica em UMA obra por dia. Se a pessoa aparece em mais de uma
+// lista no mesmo dia, vale a obra onde ela mais esteve no periodo (empate: nome).
+// Ausencia so conta se a pessoa nao estava presente em nenhuma obra naquele dia,
+// e tambem aparece numa obra so. Devolve {dia:{obra:[presentes,,ausentes]}}.
+function qoUnico(todos,dias){
+  const freq=new Map();
+  dias.forEach(d=>Object.entries(todos[d]||{}).forEach(([o,v])=>(v[0]||[]).forEach(id=>{
+    const m=freq.get(id)||freq.set(id,new Map()).get(id); m.set(o,(m.get(o)||0)+1);
+  })));
+  const melhor=(id,obs)=>{ const m=freq.get(id)||new Map();
+    return obs.slice().sort((a,b)=>((m.get(b)||0)-(m.get(a)||0))||a.localeCompare(b,'pt-BR'))[0]; };
+  const out={};
+  dias.forEach(d=>{
+    const dia=todos[d]; if(!dia) return;
+    const r={}; Object.keys(dia).forEach(o=>{ r[o]=[[],0,[]]; });
+    const pres=new Map(), aus=new Map();
+    Object.entries(dia).forEach(([o,v])=>{
+      (v[0]||[]).forEach(id=>(pres.get(id)||pres.set(id,[]).get(id)).push(o));
+      (v[2]||[]).forEach(id=>(aus.get(id)||aus.set(id,[]).get(id)).push(o));
+    });
+    pres.forEach((obs,id)=>r[melhor(id,obs)][0].push(id));
+    aus.forEach((obs,id)=>{ if(!pres.has(id)) r[melhor(id,obs)][2].push(id); });
+    Object.values(r).forEach(v=>{ v[1]=v[0].length; });
+    out[d]=r;
+  });
+  return out;
+}
+
 function qoRender(){
   const box=document.getElementById('qo-res'); if(!box) return;
   let de=document.getElementById('qo-de').value, ate=document.getElementById('qo-ate').value;
   const obraF=document.getElementById('qo-obra').value;
   const busca=qoNorm(document.getElementById('qo-func').value.trim());
-  const todos=PRESENCA_NOMES.dias||{};
   if(!de||!ate){ box.innerHTML='<div class="qo-vazio">Escolha o período.</div>'; return; }
   if(de>ate){ const t=de; de=ate; ate=t; }
 
   // Calendario completo do periodo; o quadro rola na horizontal.
   const dias=[];
   for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
+  const todos=qoUnico(PRESENCA_NOMES.dias||{},dias);
   const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
   if(filtroIds&&!filtroIds.size){ box.innerHTML='<div class="qo-vazio">Nenhum funcionário com esse nome.</div>'; return; }
 
@@ -6298,9 +6326,9 @@ function qoImprimir(){
   if(de>ate){ const t=de; de=ate; ate=t; }
   const obraF=document.getElementById('qo-obra').value;
   const busca=qoNorm(document.getElementById('qo-func').value.trim());
-  const todos=PRESENCA_NOMES.dias||{};
   const dias=[];
   for(let d=new Date(de+'T00:00:00'); qoIso(d)<=ate; d.setDate(d.getDate()+1)) dias.push(qoIso(d));
+  const todos=qoUnico(PRESENCA_NOMES.dias||{},dias);
   const filtroIds=busca?new Set(EMP.filter(e=>qoNorm(e.nome).includes(busca)).map(e=>e.id)):null;
 
   // id -> dia -> {obras:Set, falta:bool}
