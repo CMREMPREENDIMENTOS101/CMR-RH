@@ -1621,11 +1621,6 @@ label.sim-ad input.form-input{min-width:130px}
       <div class="dash-kpi-top"><span class="dash-kpi-ic">💰</span><span class="dash-kpi-tag">por mês</span></div>
       <div class="dash-kpi-num" id="d-massa">R$0</div><div class="dash-kpi-lab">Massa salarial · sal. + bônus + vales</div>
     </div>
-    <div class="dash-kpi dk-gold" onclick="dashIr('holerites')" id="d-liq-card"
-      title="Estimativa: salário − INSS e IRRF do empregado (tabelas progressivas, sem dependentes) + bônus + vales. Sem encargos da empresa.">
-      <div class="dash-kpi-top"><span class="dash-kpi-ic">💵</span><span class="dash-kpi-tag" id="d-liq-foot">líquido</span></div>
-      <div class="dash-kpi-num" id="d-liq">R$0</div><div class="dash-kpi-lab">Líquido dos funcionários · sem encargos</div>
-    </div>
     <div class="dash-kpi dk-blue" onclick="dashIr('obras')" title="Ver alocação de obras">
       <div class="dash-kpi-top"><span class="dash-kpi-ic">🏗️</span><span class="dash-kpi-tag" id="d-obras-foot">—</span></div>
       <div class="dash-kpi-num" id="d-obras">0</div><div class="dash-kpi-lab">Obras ativas</div>
@@ -3457,8 +3452,6 @@ function updateDash() {
   dashCount('d-total',total);
   dashCount('d-massa',massa,true);
   const liquido=ativo.reduce((s,e)=>s+liquidoMensal(e),0);
-  dashCount('d-liq',liquido,true);
-  dashSet('d-liq-foot', massa>0 ? '−'+fmtBRLcurto(massa-liquido)+' INSS/IR' : 'líquido');
   const obrasAtivas=(OBRAS||[]).filter(o=>!/conclu|encerr|parad|finaliz/i.test(o.status||'')).length || (OBRAS||[]).length;
   dashCount('d-obras',obrasAtivas);
   const pend=pendencias();
