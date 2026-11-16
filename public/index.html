@@ -8325,6 +8325,16 @@ function printMapaAlocacao(){
   w.document.close(); w.focus();
 }
 
+// Cor da barra lateral do card pelo cargo.
+function kbCorCargo(cargo){
+  const c=String(cargo||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  if(c.includes('encarregad')) return '#C8102E';
+  if(c.includes('meio oficial')||c.includes('meio-oficial')) return '#16A34A';
+  if(c.includes('pedreir')) return '#2563EB';
+  if(c.includes('servente')) return '#EAB308';
+  return 'var(--border)';
+}
+
 // Lista de colaboradores de uma coluna (obra), no padrao de impressao da CMR.
 function kbImprimirColuna(chave){
   const c=colunasKanban().find(x=>x.chave===chave); if(!c) return;
@@ -8389,7 +8399,7 @@ function renderKanban(){
     const visiveis=gente.filter(kbCasa);
     achados+=visiveis.length;
     const cards=visiveis.length?visiveis.map(e=>
-      '<div class="kb-card" draggable="true" data-emp="'+e.id+'"'
+      '<div class="kb-card" draggable="true" data-emp="'+e.id+'" style="border-left-color:'+kbCorCargo(e.cargo)+'"'
       +' ondragstart="kbDragStart(event,'+e.id+')" ondragend="kbDragEnd(event)">'
       +'<div class="kb-card-topo">'
         +'<div class="kb-card-av">'+(e.foto?avatarInner(e):esc(inits(e.nome)))+'</div>'
