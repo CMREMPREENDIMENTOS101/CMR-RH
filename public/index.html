@@ -8325,6 +8325,35 @@ function printMapaAlocacao(){
   w.document.close(); w.focus();
 }
 
+// Lista de colaboradores de uma coluna (obra), no padrao de impressao da CMR.
+function kbImprimirColuna(chave){
+  const c=colunasKanban().find(x=>x.chave===chave); if(!c) return;
+  const gente=colabsDaColuna(c).slice().sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  if(!gente.length){ alert('Nenhum colaborador nesta obra.'); return; }
+  const info=c.obra?[c.obra.status||'',c.obra.desc||''].filter(Boolean).join(' · '):'';
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const linhas=gente.map((e,i)=>'<tr><td class="c">'+(i+1)+'</td><td>'+esc(e.nome)+'</td><td>'+esc(e.cargo||'—')+'</td><td class="c">'+esc(e.cpf||'—')+'</td><td></td></tr>').join('');
+  const w=window.open('','_blank');
+  if(!w){ alert('O navegador bloqueou a janela de impressão. Libere os pop-ups para este site.'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Colaboradores — '+esc(c.nome)+' — CMR</title><style>'
+    +'@page{size:A4 portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1f1f23;padding:8px}'
+    +'.cab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #C8102E;padding-bottom:8px;margin-bottom:12px}'
+    +'.cab img{height:42px}.cab .t{flex:1}.cab h1{font-size:16px}.cab .s{font-size:10px;color:#666;margin-top:2px}.cab .dt{font-size:10px;color:#666;text-align:right}'
+    +'h2{font-size:14px;color:#C8102E;margin-bottom:2px}.inf{font-size:10px;color:#666;margin-bottom:10px}'
+    +'table{width:100%;border-collapse:collapse}th{background:#C8102E;color:#fff;font-size:10px;text-transform:uppercase;padding:6px;text-align:left}'
+    +'td{border-bottom:1px solid #ddd;padding:7px 6px}tr:nth-child(even) td{background:#f7f7f7}.c{text-align:center}'
+    +'.rod{margin-top:14px;font-size:10px;color:#666;display:flex;justify-content:space-between}'
+    +'</style></head><body>'
+    +'<div class="cab"><img src="'+location.origin+CMR_LOGO+'"><div class="t"><h1>CMR Empreendimentos</h1><div class="s">Lista de colaboradores por obra</div></div>'
+    +'<div class="dt">Emitido em '+hoje+'</div></div>'
+    +'<h2>'+esc(c.nome)+'</h2><div class="inf">'+esc(info)+(info?' · ':'')+gente.length+' colaborador(es)</div>'
+    +'<table><thead><tr><th class="c" style="width:30px">Nº</th><th>Nome</th><th>Função</th><th class="c" style="width:120px">CPF</th><th style="width:150px">Assinatura</th></tr></thead><tbody>'+linhas+'</tbody></table>'
+    +'<div class="rod"><span>CMR Empreendimentos — Alocação de Obras</span><span>Total: <b>'+gente.length+'</b></span></div>'
+    +'<script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');
+  w.document.close(); w.focus();
+}
+
 function renderKanban(){
   const board=document.getElementById('kb-board');
   if(!board)return;
@@ -8341,8 +8370,9 @@ function renderKanban(){
     const meta=c.semObra?'aguardando alocação'
       :(naoCadastrada?'obra não cadastrada'
       :esc([c.obra.status||'',c.obra.desc||''].filter(Boolean).join(' · ')||'Em andamento'));
+    const btnImp='<button class="kb-icon-btn" title="Imprimir lista de colaboradores" onclick="kbImprimirColuna(this.closest(\'.kb-col\').dataset.col)">&#128424;</button>';
     const acoes=c.obra
-      ? '<div class="kb-col-acoes">'
+      ? '<div class="kb-col-acoes">'+btnImp
         +'<button class="kb-icon-btn" title="Mover para a esquerda" onclick="kbMoverColuna('+c.obra.id+',-1)"'
           +(OBRAS[0]&&OBRAS[0].id===c.obra.id?' disabled':'')+'>&#9664;</button>'
         +'<button class="kb-icon-btn" title="Mover para a direita" onclick="kbMoverColuna('+c.obra.id+',1)"'
@@ -8351,10 +8381,10 @@ function renderKanban(){
         +'<button class="kb-icon-btn" title="Excluir obra" onclick="excluirObra('+c.obra.id+')">&#10005;</button>'
         +'</div>'
       : (naoCadastrada
-        ? '<div class="kb-col-acoes">'
+        ? '<div class="kb-col-acoes">'+btnImp
           +'<button class="kb-icon-btn" title="Cadastrar esta obra" onclick="cadastrarObraDetectada(this.closest(\'.kb-col\').dataset.col)">&#65291;</button>'
           +'</div>'
-        : '');
+        : '<div class="kb-col-acoes">'+btnImp+'</div>');
 
     const visiveis=gente.filter(kbCasa);
     achados+=visiveis.length;
