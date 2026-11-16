@@ -8900,7 +8900,9 @@ function dadosAdmDem(){
   const chaves=[...new Set([...Object.keys(adm),...Object.keys(dem)])].sort();
   if(!chaves.length) return [];
   let [a,m]=chaves[0].split('-').map(Number);
-  const [aF,mF]=chaves[chaves.length-1].split('-').map(Number);
+  // vai ate o mes atual, para meses sem movimento aparecerem com zero
+  const hojeK=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const [aF,mF]=[chaves[chaves.length-1],hojeK].sort()[1].split('-').map(Number);
   const out=[];
   while((a<aF||(a===aF&&m<=mF))&&out.length<24){
     const k=a+'-'+String(m).padStart(2,'0');
