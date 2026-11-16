@@ -1655,6 +1655,7 @@ label.sim-ad input.form-input{min-width:130px}
     </div>
     <div class="dash-card dash-card-full">
       <div class="dash-card-h"><span class="dash-card-t" title="Turnover do mês = ((admissões + demissões) ÷ 2) ÷ colaboradores ativos no início do mês × 100">Turnover de colaboradores — mês a mês</span><span class="dash-card-sub" id="dc-turn-sub">—</span></div>
+      <div id="dc-turn-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:4px 0 12px"></div>
       <div class="dash-cv"><canvas id="dc-turn"></canvas></div>
     </div>
     <div class="dash-card dash-card-full">
@@ -9150,6 +9151,35 @@ function renderDashCharts(){
   const st=document.getElementById('dc-turn-sub');
   if(st){ const med=turn.length?turn.reduce((s,d)=>s+d.pct,0)/turn.length:0;
     st.textContent=turn.length?('média '+med.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% ao mês'):'sem dados'; }
+  // Indicadores de permanencia em cima do grafico
+  const kb=document.getElementById('dc-turn-kpis');
+  if(kb){
+    const hoje=new Date(), DIA=864e5;
+    const fimDe=e=>e.desligado?(dataDeBR(e.dtDesl)||hoje):hoje;
+    const comAdm=EMP.filter(e=>dataDeBR(e.adm));
+    const dias=e=>Math.max(0,(fimDe(e)-dataDeBR(e.adm))/DIA);
+    const media=l=>l.length?l.reduce((s,e)=>s+dias(e),0)/l.length:0;
+    const tempo=d=>d>=365?(d/365).toLocaleString('pt-BR',{maximumFractionDigits:1})+' anos':d>=60?Math.round(d/30.4)+' meses':Math.round(d)+' dias';
+    const at=comAdm.filter(e=>!e.desligado), sai=comAdm.filter(e=>e.desligado);
+    const prazoExp=e=>{ const m=expMarcos(e); return m.length?m[m.length-1].dias:90; };
+    const elegiveis=comAdm.filter(e=>(hoje-dataDeBR(e.adm))/DIA>=prazoExp(e)||e.desligado);
+    const passou=elegiveis.filter(e=>dias(e)>=prazoExp(e));
+    const saiuExp=sai.filter(e=>dias(e)<prazoExp(e));
+    const pctPassou=elegiveis.length?Math.round(passou.length/elegiveis.length*100):0;
+    const ult12=turn.slice(-12), turn12=ult12.reduce((s,d)=>s+d.pct,0);
+    const ini12=(()=>{ const d=new Date(hoje.getFullYear(),hoje.getMonth()-11,1); return d; })();
+    const sai12=sai.filter(e=>{ const s=dataDeBR(e.dtDesl); return s&&s>=ini12; }).length;
+    const box=(v,l,t)=>'<div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 12px" title="'+t+'">'
+      +'<div style="font-size:20px;font-weight:700;color:var(--text)">'+v+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+l+'</div></div>';
+    kb.innerHTML=
+       box(tempo(media(at)),'Tempo médio de casa (ativos)','Média do tempo desde a admissão dos colaboradores ativos')
+      +box(sai.length?tempo(media(sai)):'—','Tempo médio até o desligamento','Média de permanência de quem já saiu')
+      +box(pctPassou+'%','Passaram da experiência',passou.length+' de '+elegiveis.length+' que já completariam o prazo de experiência')
+      +box(saiuExp.length,'Saíram na experiência','Desligados antes de completar o prazo de experiência')
+      +box(sai12,'Desligamentos em 12 meses','Desligamentos nos últimos 12 meses')
+      +box(turn12.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%','Turnover acumulado (12 meses)','Soma do turnover mensal dos últimos 12 meses do gráfico')
+      +box(comAdm.length?Math.round(at.length/comAdm.length*100)+'%':'—','Retenção geral',at.length+' ativos de '+comAdm.length+' já contratados');
+  }
   const corTurn=CMRVIZ.cor(0);
   dashNovoGrafico('dc-turn',{type:'bar',
     data:{labels:turn.map(d=>d.rotulo),datasets:[CMRVIZ.barra({data:turn.map(d=>d.pct),
