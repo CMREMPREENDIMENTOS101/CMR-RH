@@ -1746,7 +1746,7 @@ label.sim-ad input.form-input{min-width:130px}
       <div class="form-grid">
         <div class="form-group"><label>Data Exame Médico</label><input class="form-input" type="date" id="f-exame" required></div>
         <div class="form-group"><label>Data Admissão</label><input class="form-input" type="date" id="f-adm" required></div>
-        <div class="form-group"><label>Cargo</label><select class="form-select" id="f-cargo" required><option value="">Selecionar...</option><option>Pedreiro</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option></select></div>
+        <div class="form-group"><label>Cargo</label><select class="form-select" id="f-cargo" required onchange="salarioPorCargo(this.value,'f-sal',false)"><option value="">Selecionar...</option><option>Pedreiro</option><option>Meio-Oficial</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option></select></div>
         <div class="form-group"><label>Salário (R$)</label><input class="form-input" type="text" id="f-sal" placeholder="2.081,20" required></div>
         <div class="form-group"><label>Bônus Adicional (R$)</label><input class="form-input" type="text" id="f-bonus" placeholder="0,00"></div>
         <div class="form-group"><label>Contrato</label><select class="form-select" id="f-ct"><option value="Experiência 45+45">Experiência 45+45</option><option value="Experiência 30+60">Experiência 30+60</option><option value="Prazo Determinado 90 dias">Prazo Det. 90 dias</option><option value="Indeterminado">Indeterminado</option></select></div>
@@ -2133,7 +2133,7 @@ label.sim-ad input.form-input{min-width:130px}
       </div>
       <select id="filtro-cargo" onchange="filtrarContratos()" style="appearance:none;background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:7px;padding:8px 36px 8px 14px;font-size:13px;cursor:pointer;min-width:160px">
         <option value="">👷 Todos os cargos</option>
-        <option>Pedreiro</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Armador</option><option>Eletricista</option><option>Carpinteiro</option><option>Ajudante</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option>
+        <option>Pedreiro</option><option>Meio-Oficial</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Armador</option><option>Eletricista</option><option>Carpinteiro</option><option>Ajudante</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option>
       </select>
       <select id="filtro-ct" onchange="filtrarContratos()" style="appearance:none;background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:7px;padding:8px 36px 8px 14px;font-size:13px;cursor:pointer;min-width:200px">
         <option value="">📄 Todos os contratos</option>
@@ -2220,8 +2220,8 @@ label.sim-ad input.form-input{min-width:130px}
     <div class="form-section-title" style="margin-top:20px">Contrato</div>
     <div class="form-grid-3">
       <div class="form-group"><label>Cargo</label>
-        <select id="edit-cargo" class="form-select">
-          <option>Pedreiro</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Armador</option><option>Eletricista</option><option>Carpinteiro</option><option>Ajudante</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option>
+        <select id="edit-cargo" class="form-select" onchange="salarioPorCargo(this.value,'edit-sal',true)">
+          <option>Pedreiro</option><option>Meio-Oficial</option><option>Servente</option><option>Mestre de Obras</option><option>Contra-Mestre</option><option>Encarregado</option><option>Armador</option><option>Eletricista</option><option>Carpinteiro</option><option>Ajudante</option><option>Administrativo/RH</option><option>Aux. Engenharia</option><option>Engenheiro (a)</option>
         </select>
       </div>
       <div class="form-group"><label>Salário</label><input id="edit-sal" class="form-input" placeholder="R$ 0,00"></div>
@@ -11666,6 +11666,16 @@ async function instalarApp(){
   document.body.appendChild(m);
 }
 
+</script>
+<script>
+// Salario padrao ao trocar o cargo (pode ser editado depois).
+const SAL_CARGO={'Pedreiro':'3137,20','Meio-Oficial':'2402,40','Servente':'2217,60'};
+function salarioPorCargo(cargo,campo,comRS){
+  const v=SAL_CARGO[cargo]; const el=document.getElementById(campo);
+  if(!v||!el) return;
+  el.value=comRS?'R$ '+v:v.replace(/^(d)(d{3}),/,'$1.$2,');
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
 </script>
 </body>
 </html>
