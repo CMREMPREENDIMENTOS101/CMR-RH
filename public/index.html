@@ -2044,7 +2044,11 @@ label.sim-ad input.form-input{min-width:130px}
         <div class="hx-graf-tit">Presenças e faltas por colaborador</div>
         <div class="hx-graf-sub" id="fx-graf-sub" style="margin-bottom:0">—</div>
       </div>
-      <button class="btn btn-secondary" onclick="printFaltasGrafico()">&#9113; Imprimir gráfico</button>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <label class="fx-mes-lb">Obra<select class="form-select" id="fxg-obra" onchange="renderFaltas()"><option value="">Todas as obras</option></select></label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding-bottom:9px"><input type="checkbox" id="fxg-desl" onchange="renderFaltas()"> Mostrar desligados</label>
+        <button class="btn btn-secondary" onclick="printFaltasGrafico()">&#9113; Imprimir gráfico</button>
+      </div>
     </div>
     <div class="fx-graf-area" id="fx-graf-area"><canvas id="fx-graf"></canvas></div>
   </div>
@@ -7674,6 +7678,8 @@ function renderFaltasGrafico(dados){
     return;
   }
   if(!document.getElementById('fx-graf')) area.innerHTML='<canvas id="fx-graf"></canvas>';
+  if(!linhas.length){ area.style.height='60px'; area.innerHTML='<div class="hx-graf-erro">Nenhum colaborador com esses filtros.</div>';
+    document.getElementById('fx-graf-sub').textContent='—'; return; }
   area.style.height=(linhas.length*24+70)+'px';
 
   const css=getComputedStyle(document.documentElement);
@@ -7752,8 +7758,12 @@ function renderFaltasGrafico(dados){
 
   const totP=linhas.reduce((t,l)=>t+l.pres,0), totF=linhas.reduce((t,l)=>t+l.faltas.length,0), totS=linhas.reduce((t,l)=>t+l.sem,0);
   const nDesl=linhas.filter((l,i)=>saiu(i)).length;
+  const fxgO=(document.getElementById('fxg-obra')||{}).value||'';
+  const ultDia=(dados.uteis||[]).filter(fxTemRelatorio).pop();
   document.getElementById('fx-graf-sub').textContent=
-    'Mesma ordem do quadro acima (maior % de faltas no topo). '+totP+' presen\u00e7as, '+totF+' faltas e '+totS
+    (fxMes?fxRotMes(fxMes):'Todo o período')+(fxgO?' · '+fxgO:'')
+    +(ultDia?' · dados até '+fxDM(ultDia):'')+'. '
+    +'Maior % de faltas no topo. '+totP+' presen\u00e7as, '+totF+' faltas e '+totS
     +' dias n\u00e3o verific\u00e1veis. O % considera s\u00f3 presen\u00e7as + faltas \u2014 barra curta com % alto indica poucos dias para concluir.'
     +(nDesl?' '+nDesl+' j\u00e1 desligado'+(nDesl===1?'':'s')+' aparece'+(nDesl===1?'':'m')+' em cinza.':'');
 }
@@ -7864,14 +7874,31 @@ function renderFaltas(){
     +(equipe.length?'<br><b>Fora da an\u00e1lise \u2014 Equipe T\u00e9cnica</b> (circula entre obras e envia os avisos): '+nomes(equipe)+'.':'')
     +(semReg.length?'<br><b>Sem nenhum registro nos avisos do per\u00edodo:</b> '+nomes(semReg)+'.':'')
     +'<br>Passe o mouse no nome para ver as grafias usadas no WhatsApp. Fonte: '+esc(PRESENCA_NOMES.fonte)+'.';
-  renderFaltasGrafico(dadosFx);
+  renderFaltasGrafico(fxFiltroGrafico(dadosFx));
+}
+
+// Filtros proprios do grafico: obra (quem esteve nela no recorte) e desligados.
+function fxFiltroGrafico(dados){
+  const sel=document.getElementById('fxg-obra');
+  const dias=dados.uteis||[];
+  if(sel){
+    const obras=new Set(); dias.forEach(d=>Object.keys(PRESENCA_NOMES.dias[d]||{}).forEach(o=>obras.add(o)));
+    const atual=sel.value, lista=[...obras].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    sel.innerHTML='<option value="">Todas as obras</option>'+lista.map(o=>'<option'+(o===atual?' selected':'')+'>'+esc(o)+'</option>').join('');
+    if(atual&&!obras.has(atual)) sel.value='';
+  }
+  const obra=sel?sel.value:'', verDesl=!!(document.getElementById('fxg-desl')||{}).checked;
+  let ids=null;
+  if(obra){ ids=new Set(); dias.forEach(d=>{ const r=(PRESENCA_NOMES.dias[d]||{})[obra]; if(r){ (r[0]||[]).forEach(i=>ids.add(i)); (r[2]||[]).forEach(i=>ids.add(i)); } }); }
+  const linhas=dados.linhas.filter(l=>(verDesl||!l.e.desligado)&&(!ids||ids.has(l.e.id)));
+  return {...dados, linhas};
 }
 
 // Impressao do grafico de presencas x faltas. As barras sao montadas em HTML,
 // e nao copiadas do canvas: no tema escuro o grafico da tela tem texto claro
 // sobre fundo transparente, que some no papel branco.
 function printFaltasGrafico(){
-  const {uteis,linhas}=faltasCalcular(fxMes);
+  const {uteis,linhas}=fxFiltroGrafico(faltasCalcular(fxMes));
   if(!linhas.length){ alert('Nenhum colaborador para imprimir.'); return; }
   const totP=linhas.reduce((t,l)=>t+l.trab,0), totF=linhas.reduce((t,l)=>t+l.faltas.length,0), totS=linhas.reduce((t,l)=>t+l.sem,0);
   const totB=linhas.reduce((t,l)=>t+l.base,0);
