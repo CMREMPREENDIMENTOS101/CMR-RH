@@ -11256,14 +11256,15 @@ async function renderHolerites(){
 // Dois botões "confirmar pagamento" por colaborador: adiantamento e salário,
 // independentes. Vivem na medição (hoEdit[id].pagoAdi / .pagoSal = {em,por}) e
 // são gravados no Salvar medição. Linha "quitada" (os dois pagos) ganha barra verde.
-const HO_PAGO_CHAVE={adi:'pagoAdi', sal:'pagoSal'};
-const HO_PAGO_ROT={adi:'Adiantamento', sal:'Salário'};
+const HO_PAGO_CHAVE={adi:'pagoAdi', sal:'pagoSal', d13:'pago13'};
+const HO_PAGO_ROT={adi:'Adiantamento', sal:'Salário', d13:'13º'};
 const hoPagoTitulo=(tipo,p)=>p
   ? (HO_PAGO_ROT[tipo]+' pago'+(p.em?' em '+new Date(p.em).toLocaleDateString('pt-BR'):'')+(p.por?' · '+p.por:'')+' — clique para desfazer')
   : ('Marcar '+HO_PAGO_ROT[tipo].toLowerCase()+' como pago');
 const hoPagoUm=(l,tipo)=>{ const p=l.ed[HO_PAGO_CHAVE[tipo]];
   return '<button type="button" class="ho-pago-btn ho-pago-'+tipo+(p?' ho-pago-on':'')+'" data-pago="'+l.e.id+'" data-tipo="'+tipo+'" title="'+esc(hoPagoTitulo(tipo,p))+'">'+(p?'✓ ':'')+HO_PAGO_ROT[tipo]+'</button>'; };
-const hoPagoBtnHtml=l=>'<div class="ho-pago-wrap">'+hoPagoUm(l,'adi')+hoPagoUm(l,'sal')+'</div>';
+// 13º: botão só nas competências de novembro e dezembro
+const hoPagoBtnHtml=l=>'<div class="ho-pago-wrap">'+hoPagoUm(l,'adi')+hoPagoUm(l,'sal')+(/-(11|12)$/.test(hoMes)?hoPagoUm(l,'d13'):'')+'</div>';
 function hoTogglePago(id,tipo){
   const chave=HO_PAGO_CHAVE[tipo]; if(!chave) return;
   const ed=hoEdit[id]=hoEdit[id]||{};
