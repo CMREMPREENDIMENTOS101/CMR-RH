@@ -9248,9 +9248,15 @@ function renderDashCharts(){
   compsF.forEach(c=>{
     const pg=(typeof HO_PAGAMENTOS!=='undefined'&&HO_PAGAMENTOS&&HO_PAGAMENTOS[c])||{};
     let a=0,v=0; Object.values(pg).forEach(x=>{ a+=x.adi||0; v+=x.vt||0; });
-    serieAdi.push(a); serieVt.push(v); totalPg+=a+v;
     const med=(typeof HO_DADOS!=='undefined'&&HO_DADOS&&HO_DADOS.competencias&&HO_DADOS.competencias[c]);
     const tot=med&&med.resumoObras&&med.resumoObras.total;
+    // Mês sem extrato de pagamentos completo (out/nov em diante): usa os
+    // lançamentos da medição salva em Holerites — total a pagar + adiantamentos.
+    if(med&&tot>0&&a+v<tot*0.5){
+      let adiM=0, vtM=0; Object.values(med.linhas||{}).forEach(l=>{ adiM+=hoValor(l.adi); vtM+=hoValor(l.vt); });
+      a=Math.max(0,tot+adiM-vtM); v=vtM;
+    }
+    serieAdi.push(a); serieVt.push(v); totalPg+=a+v;
     if(tot>0){ temFolha=true; serieFolha.push(tot); } else serieFolha.push(null);
   });
   const sf=document.getElementById('dc-folha-sub');
