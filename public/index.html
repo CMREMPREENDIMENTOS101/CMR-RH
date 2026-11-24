@@ -11083,12 +11083,43 @@ function hoLinhas(){
     const dsrFaltas=dsrHoras*horaCad;
     // líquido = salário + bônus − faltas − DSR − descontos extras (sem HE e sem
     // INSS/IRPF, que ficam com a contabilidade); total a pagar = líquido + vales
-    const liq=sal+bon-desc-dsrFaltas-adi-dext;
+    // 13º salário: 1ª parcela em novembro, 2ª em dezembro (só nessas competências)
+    const auto13=ho13Auto(e,hoMes,salCad);
+    const d13=!auto13.mes?0:(tem('d13')?hoValor(ed.d13):auto13.valor);
+    const liq=sal+bon-desc-dsrFaltas-adi-dext+d13;
     const total=liq+va+vc+vt;
-    const formulaErro=['adi','sal','bon','va','vc','vt','dext','faltas','dsr','he50','he100'].filter(c=>hoTemFormula(ed[c])&&isNaN(hoAvaliar(ed[c])));
+    const formulaErro=['adi','sal','bon','va','vc','vt','dext','faltas','dsr','he50','he100','d13'].filter(c=>hoTemFormula(ed[c])&&isNaN(hoAvaliar(ed[c])));
     return {e, ed, adi, sal, salCad, salEditado, bon, bonCad, bonEditado, va, vc, vaCad, vcCad, autoVA, vaEditado, vcEditado:tem('vc'), vt, dext, fAuto:auto.n, autoFaltaH, autoDsrH, faltas, faltasManual, dsrHoras, dsrManual, he50, he100, vHe50, vHe100, vHe, desc,
-      dsrHe, dsrFaltas, liq, total, formulaErro};
+      dsrHe, dsrFaltas, liq, total, formulaErro, d13, auto13, d13Editado:tem('d13')};
   });
+}
+
+// 13º salário. Avos = meses do ano com 15 dias ou mais de contrato (da admissão
+// até o desligamento). Base = salário do cadastro. Novembro: 1ª parcela = metade,
+// sem descontos. Dezembro: 2ª parcela = 13º integral − 1ª parcela − INSS − IRRF
+// (estimativa; a 1ª parcela vem da medição de novembro, se foi editada lá).
+function ho13Avos(e,ano){
+  const adm=dataDeBR(e.adm); if(!adm) return 0;
+  const desl=e.desligado?dataDeBR(e.dtDesl):null;
+  let n=0;
+  for(let m=0;m<12;m++){
+    const ini=new Date(ano,m,1), fim=new Date(ano,m+1,0);
+    const a=adm>ini?adm:ini, b=desl&&desl<fim?desl:fim;
+    if(b>=a&&Math.round((b-a)/864e5)+1>=15) n++;
+  }
+  return n;
+}
+function ho13Auto(e,comp,salCad){
+  const mes=+comp.slice(5,7), ano=+comp.slice(0,4);
+  if(mes!==11&&mes!==12) return {mes:0,valor:0};
+  if(e.desligado) return {mes,valor:0,avos:0,txt:'desligado: 13º vai na rescisão'};
+  const avos=ho13Avos(e,ano), integral=salCad*avos/12;
+  if(mes===11) return {mes,valor:integral/2,avos,integral,txt:'1ª parcela · '+avos+'/12 avos'};
+  const nov=((HO_DADOS.competencias[ano+'-11']||{}).linhas||{})[e.id]||{};
+  const p1=nov.d13!=null&&nov.d13!==''?hoValor(nov.d13):integral/2;
+  const inss=inssEmpregado(integral), ir=irrfEmpregado(integral,inss);
+  return {mes,valor:Math.max(0,integral-p1-inss-ir),avos,integral,
+    txt:'2ª parcela · '+avos+'/12 · − 1ª '+fmtBRL(p1)+' − INSS '+fmtBRL(inss)+(ir?' − IR '+fmtBRL(ir):'')};
 }
 
 function hoFiltradas(linhas){
@@ -11149,11 +11180,13 @@ async function renderHolerites(){
       +' value="'+esc(vazio&&padrao!=null?padrao:hoMostrar(campo,raw))+'" placeholder="'+ph+'" inputmode="decimal"'
       +(f?' title="'+esc(erro?'Fórmula inválida: '+raw:'Fórmula: '+raw)+'"':' title="Aceita fórmula: =54+46"')+'>';
   };
+  const tem13=/-(11|12)$/.test(hoMes);
   let h='<thead><tr>'
     +'<th class="ho-fix">Colaborador</th><th>Adiantamento</th><th>Salário</th><th>Bônus</th><th>Vale<br>alimentação</th><th>Vale<br>café</th><th>Vale<br>transporte</th>'
     +'<th class="ho-sep">Faltas<br><small>horas</small></th><th>Desconto<br>faltas</th>'
     +'<th class="ho-sep">HE 50%<br><small>horas</small></th><th>HE 100%<br><small>horas</small></th><th class="ho-info">Valor HE<br><small>informativo</small></th>'
     +'<th class="ho-sep">DSR faltas<br><small>horas</small></th><th>Descontos<br>extras</th>'
+    +(tem13?'<th class="ho-sep">13º salário<br><small>'+(hoMes.endsWith('-11')?'1ª parcela':'2ª parcela')+'</small></th>':'')
     +'<th class="ho-sep ho-liq">Salário<br>líquido</th><th class="ho-tot">Total a pagar<br><small>líquido + vales</small></th><th>Observação</th></tr></thead><tbody>';
   if(!linhas.length) h+='<tr><td class="ho-vazio" colspan="19">Nenhum colaborador com esse filtro.</td></tr>';
   linhas.forEach(l=>{
@@ -11178,6 +11211,8 @@ async function renderHolerites(){
       +'<td class="ho-v ho-info" data-o="he">'+(l.vHe?fmtBRL(l.vHe):'—')+'</td>'
       +'<td class="ho-sep">'+inp(l,'dsr',hoFmtCampo('dsr',l.autoDsrH),'ho-n',hoFmtCampo('dsr',l.autoDsrH))+'<small class="ho-dica ho-neg" data-o="dsr">'+(l.dsrFaltas?'− '+fmtBRL(l.dsrFaltas):'—')+'</small></td>'
       +'<td>'+inp(l,'dext','0,00','ho-rs')+'</td>'
+      +(tem13?'<td class="ho-sep">'+inp(l,'d13',hoFmtCampo('d13',l.auto13.valor),'ho-rs',hoFmtCampo('d13',l.auto13.valor))
+        +'<small class="ho-dica" title="'+esc(l.auto13.txt||'')+'">'+(l.d13Editado?'calculado: '+fmtBRL(l.auto13.valor):esc(l.auto13.txt||''))+'</small></td>':'')
       +'<td class="ho-v ho-sep ho-liq" data-o="liq">'+fmtBRL(l.liq)+'</td>'
       +'<td class="ho-v ho-tot" data-o="total">'+fmtBRL(l.total)+'</td>'
       +'<td><input class="ho-in ho-obs" data-id="'+id+'" data-campo="obs" value="'+esc(l.ed.obs||'')+'" placeholder="atestado, observação…"></td>'
@@ -11262,7 +11297,7 @@ function hoSomar(ls){
   const s=k=>ls.reduce((t,l)=>t+l[k],0);
   return {n:ls.length, adi:s('adi'), sal:s('sal'), bon:s('bon'), va:s('va'), vc:s('vc'), vt:s('vt'), faltas:s('faltas'), desc:s('desc'),
     he50:s('he50'), he100:s('he100'), vHe50:s('vHe50'), vHe100:s('vHe100'), vHe:s('vHe'), dsrHe:s('dsrHe'), dsrFaltas:s('dsrFaltas'),
-    dext:s('dext'), liq:s('liq'), total:s('total')};
+    dext:s('dext'), d13:s('d13'), liq:s('liq'), total:s('total')};
 }
 
 function hoTotais(todas, linhas){
@@ -11281,6 +11316,7 @@ function hoTotais(todas, linhas){
     +k(fmtBRLcurto(F.vHe50),'HE 50% · '+hxDec(F.he50)+' h · fora do total')
     +k(fmtBRLcurto(F.vHe100),'HE 100% · '+hxDec(F.he100)+' h · fora do total')
     +k((F.desc+F.dsrFaltas)?'− '+fmtBRLcurto(F.desc+F.dsrFaltas):'R$ 0','faltas + DSR · '+hxDec(F.faltas)+' h')
+    +(/-(11|12)$/.test(hoMes)?k(fmtBRLcurto(F.d13),'13º · '+(hoMes.endsWith('-11')?'1ª':'2ª')+' parcela (no líquido)'):'')
     +k(fmtBRLcurto(F.liq),'salários líquidos')
     +k(fmtBRLcurto(F.va+F.vc+F.vt),'vales (alim. + café + transp.)')
     +k(fmtBRLcurto(F.total),'total a pagar');
@@ -11292,6 +11328,7 @@ function hoTotais(todas, linhas){
     +'<td class="ho-sep ho-v">'+hxDec(F.he50)+'</td><td class="ho-v">'+hxDec(F.he100)+'</td><td class="ho-v">'+fmtBRL(F.vHe)+'</td>'
     +'<td class="ho-v ho-sep">'+dsrT+'</td>'
     +'<td class="ho-v ho-neg">'+hoMenos(F.dext)+'</td>'
+    +(/-(11|12)$/.test(hoMes)?'<td class="ho-v ho-sep">'+fmtBRL(F.d13)+'</td>':'')
     +'<td class="ho-v ho-sep ho-liq">'+fmtBRL(F.liq)+'</td>'
     +'<td class="ho-v ho-tot">'+fmtBRL(F.total)+'</td><td></td></tr>';
 }
