@@ -11109,14 +11109,27 @@ function ho13Avos(e,ano){
   }
   return n;
 }
+// 1ª parcela do 13º paga em nov/2026 (planilha da contabilidade), por nome.
+const HO_13_P1={2026:{
+  'ADILSIONE DOS SANTOS':896.86,'ALDISIONE DOS SANTOS':896.86,'ALAN DIEGO DE OLIVEIRA IANOSKI':1007.41,'ALESSANDRO KOZAN':1268.42,
+  'ALEXANDRE HILGENBERG':412.21,'ALISSON DANIEL FERREIRA':1270.27,'ALISSON DANIEL FEREIRA':1270.27,'EDENILSON DE LARA':626.74,
+  'ERICK IANOSKI RAMA':1040.58,'ERISON JOSE DOS SANTOS':558.41,'FABIANO MACHADO':671.36,'FELIPE BATISTA DOS SANTOS':820.69,
+  'GERALDO DOS SANTOS AVILA':1555.64,'GERONIMO CARLOS CLAUDINO':856.28,'GIOVANI ALVES PEDROSO':699.79,'JACKSON CARDOSO':539.21,
+  'JOAO PEDRO PEREIRA DOS SANTOS':904.52,'JULIO CESAR DE FREITAS ANTUNES':615.78,'MAYKON LUIZ BARBOZA':1864.20,
+  'MICHAEL LEAL DO VALLE':652.24,'NERISON DE JESUS FERREIRA':1225.90,'NERISON DE JESUS FERREIRA JUNIOR':1470.59,
+  'RUI CARLOS TERNOPOLSKI':606.66,'UZIEL BARBOZA':1802.26,'VICTOR RODRIGUES PROBST':813.99,'WILLIAN VINICIUS CORREA DOS SANTOS':924.43}};
+const ho13Nome=n=>String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+const ho13P1Tabela=(e,ano)=>{ const t=HO_13_P1[ano]; return t?t[ho13Nome(e.nome)]:undefined; };
 function ho13Auto(e,comp,salCad){
   const mes=+comp.slice(5,7), ano=+comp.slice(0,4);
   if(mes!==11&&mes!==12) return {mes:0,valor:0};
-  if(e.desligado) return {mes,valor:0,avos:0,txt:'desligado: 13º vai na rescisão'};
+  const tab=ho13P1Tabela(e,ano);
+  if(e.desligado&&tab==null) return {mes,valor:0,avos:0,txt:'desligado: 13º vai na rescisão'};
   const avos=ho13Avos(e,ano), integral=salCad*avos/12;
-  if(mes===11) return {mes,valor:integral/2,avos,integral,txt:'1ª parcela · '+avos+'/12 avos'};
+  if(mes===11) return tab!=null?{mes,valor:tab,avos,integral,txt:'1ª parcela · valor da contabilidade'}
+    :{mes,valor:integral/2,avos,integral,txt:'1ª parcela · '+avos+'/12 avos'};
   const nov=((HO_DADOS.competencias[ano+'-11']||{}).linhas||{})[e.id]||{};
-  const p1=nov.d13!=null&&nov.d13!==''?hoValor(nov.d13):integral/2;
+  const p1=nov.d13!=null&&nov.d13!==''?hoValor(nov.d13):(tab!=null?tab:integral/2);
   const inss=inssEmpregado(integral), ir=irrfEmpregado(integral,inss);
   return {mes,valor:Math.max(0,integral-p1-inss-ir),avos,integral,
     txt:'2ª parcela · '+avos+'/12 · − 1ª '+fmtBRL(p1)+' − INSS '+fmtBRL(inss)+(ir?' − IR '+fmtBRL(ir):'')};
